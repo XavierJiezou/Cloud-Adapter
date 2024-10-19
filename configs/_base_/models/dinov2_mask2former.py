@@ -1,16 +1,16 @@
-crop_size = (512, 512)
-num_classes = 19
+# crop_size = (512, 512)
+num_classes = 19 # 
 model = dict(
     type="EncoderDecoder",
-    data_preprocessor=dict(
-        type="SegDataPreProcessor",
-        mean=[123.675, 116.28, 103.53],
-        std=[58.395, 57.12, 57.375],
-        size=crop_size,
-        bgr_to_rgb=True,
-        pad_val=0,
-        seg_pad_val=255,
-    ),
+    # data_preprocessor=dict(
+    #     type="SegDataPreProcessor",
+    #     mean=[123.675, 116.28, 103.53],
+    #     std=[58.395, 57.12, 57.375],
+    #     size=(512, 512),
+    #     bgr_to_rgb=True,
+    #     pad_val=0,
+    #     seg_pad_val=255,
+    # ),
     backbone=dict(
         type="DinoVisionTransformer",
         patch_size=16,
@@ -111,11 +111,11 @@ model = dict(
             init_cfg=None,
         ),
         loss_cls=dict(
-            type="mmdet.CrossEntropyLoss",
+            type="mmdet.CrossEntropyLoss", # 解决类别不均衡
             use_sigmoid=False,
             loss_weight=2.0,
             reduction="mean",
-            class_weight=[1.0] * num_classes + [0.1],
+            class_weight=[1.0] * num_classes + [0.1], # [1, 1, 0.1]
         ),
         loss_mask=dict(
             type="mmdet.CrossEntropyLoss",
