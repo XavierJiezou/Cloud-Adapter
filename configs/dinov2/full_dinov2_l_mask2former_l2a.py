@@ -2,7 +2,7 @@
 _base_ = [
     "../_base_/datasets/cloudsen12_high_l2a.py",
     "../_base_/default_runtime.py",
-    "../_base_/models/dinov2_mask2former.py",
+    "../_base_/models/dinov2_l_mask2former.py",
 ]
 # model
 

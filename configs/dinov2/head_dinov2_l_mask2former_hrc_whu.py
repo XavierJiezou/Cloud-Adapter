@@ -1,8 +1,8 @@
 # dataset config
 _base_ = [
-    "../_base_/datasets/gf12ms_whu_gf1.py",
+    "../_base_/datasets/hrc_whu.py",
     "../_base_/default_runtime.py",
-    "../_base_/models/dinov2_mask2former.py",
+    "../_base_/models/dinov2_l_mask2former.py",
 ]
 # model
 
@@ -10,6 +10,7 @@ _base_ = [
 num_classes = 2
 
 model = dict(
+    type="FrozenBackboneEncoderDecoder",
     data_preprocessor=dict(
         type="SegDataPreProcessor",
         mean=[123.675, 116.28, 103.53],
@@ -58,22 +59,22 @@ optim_wrapper = dict(
     ),
 )
 param_scheduler = [
-    dict(type="PolyLR", eta_min=0, power=0.9, begin=0, end=79300, by_epoch=False)
+    dict(type="PolyLR", eta_min=0, power=0.9, begin=0, end=1500, by_epoch=False)
 ]
 
 # training schedule for 160k
 # train_cfg = dict(type="IterBasedTrainLoop", max_iters=40000, val_interval=10000)
-train_cfg = dict(type="IterBasedTrainLoop", max_iters=79300, val_interval=793)
+train_cfg = dict(type="IterBasedTrainLoop", max_iters=1500, val_interval=15)
 val_cfg = dict(type="ValLoop")
 test_cfg = dict(type="TestLoop")
 default_hooks = dict(
     timer=dict(type="IterTimerHook"),
-    logger=dict(type="LoggerHook", interval=793, log_metric_by_epoch=False),
+    logger=dict(type="LoggerHook", interval=15, log_metric_by_epoch=False),
     param_scheduler=dict(type="ParamSchedulerHook"),
     checkpoint=dict(
         type="CheckpointHook",
         by_epoch=False,
-        interval=793,
+        interval=15,
         max_keep_ckpts=1,
         save_best=["mIoU"],
         rule="greater",

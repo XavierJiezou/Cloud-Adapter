@@ -10,7 +10,7 @@ sys.path.append(os.curdir)
 
 from mmengine.config import Config, DictAction
 from mmengine.runner import Runner
-import rein
+import rein.datasets
 
 
 # TODO: support fuse_conv_bn, visualization, and format_only

@@ -1,8 +1,8 @@
 # dataset config
 _base_ = [
-    "../_base_/datasets/l8_biome.py",
+    "../_base_/datasets/cloudsen12_high_l1c.py",
     "../_base_/default_runtime.py",
-    "../_base_/models/dinov2_mask2former.py",
+    "../_base_/models/dinov2_l_mask2former.py",
 ]
 # model
 
@@ -58,22 +58,22 @@ optim_wrapper = dict(
     ),
 )
 param_scheduler = [
-    dict(type="PolyLR", eta_min=0, power=0.9, begin=0, end=99200, by_epoch=False)
+    dict(type="PolyLR", eta_min=0, power=0.9, begin=0, end=106200, by_epoch=False)
 ]
 
 # training schedule for 160k
 # train_cfg = dict(type="IterBasedTrainLoop", max_iters=40000, val_interval=10000)
-train_cfg = dict(type="IterBasedTrainLoop", max_iters=99200, val_interval=992)
+train_cfg = dict(type="IterBasedTrainLoop", max_iters=106200, val_interval=1062)
 val_cfg = dict(type="ValLoop")
 test_cfg = dict(type="TestLoop")
 default_hooks = dict(
     timer=dict(type="IterTimerHook"),
-    logger=dict(type="LoggerHook", interval=992, log_metric_by_epoch=False),
+    logger=dict(type="LoggerHook", interval=1062, log_metric_by_epoch=False),
     param_scheduler=dict(type="ParamSchedulerHook"),
     checkpoint=dict(
         type="CheckpointHook",
         by_epoch=False,
-        interval=992,
+        interval=1062,
         max_keep_ckpts=1,
         save_best=["mIoU"],
         rule="greater",
