@@ -10,7 +10,7 @@ data_preprocessor = dict(
     seg_pad_val=255,
     size=(512, 512),
 )
-checkpoint_file = "checkpoints/sam_vit_h_converted_512x512.pth"
+checkpoint_file = "checkpoints/sam_vit_l_converted_512x512.pth"
 model = dict(
     type="EncoderDecoder",
     data_preprocessor=data_preprocessor,
