@@ -1,11 +1,10 @@
-crop_size = (512, 512)
 num_classes = 19
 norm_cfg = dict(type="SyncBN", requires_grad=True)
 data_preprocessor = dict(
     type="SegDataPreProcessor",
     mean=[123.675, 116.28, 103.53],
     std=[58.395, 57.12, 57.375],
-    size=crop_size,
+    size=(512, 512),
     bgr_to_rgb=True,
     pad_val=0,
     seg_pad_val=255,
@@ -156,9 +155,5 @@ model = dict(
     ),
     # model training and testing settings
     train_cfg=dict(),
-    test_cfg=dict(
-        mode="slide",
-        crop_size=(512, 512),
-        stride=(341, 341),
-    ),
+    test_cfg=dict(mode='whole'),
 )
