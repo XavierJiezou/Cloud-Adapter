@@ -3,14 +3,14 @@ from mmseg.datasets import BaseSegDataset
 
 
 @DATASETS.register_module()
-class HRCWHUDataset(BaseSegDataset):
+class GF12MSWHUGF2Dataset(BaseSegDataset):
     METAINFO = dict(
         classes=('clear sky', 'cloud'),
-        palette=[[0, 0, 0],[255, 255, 255]])
+        palette=[[0, 0, 0], [255, 255, 255]])
 
     def __init__(self,
-                 img_suffix='.tif',
-                 seg_map_suffix='.tif',
+                 img_suffix='.png',
+                 seg_map_suffix='.png',
                  reduce_zero_label=False,
                  **kwargs) -> None:
         super().__init__(
