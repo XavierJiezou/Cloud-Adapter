@@ -9,7 +9,6 @@ from typing import Literal, List, Tuple
 import matplotlib.pyplot as plt
 from utils.stretch import gaussian_stretch
 import torch
-from lightning import seed_everything
 
 
 class CloudSEN12High(Dataset):
