@@ -67,7 +67,7 @@ def get_dataset(root,save_path,phase, serial):
 
 
 if __name__ == "__main__":
-    # use example:python tools/convert_datasets/create_gf12.py --root /data/zouxuechao/cloudseg/gf12ms_whu --save_path /data/zouxuechao/mmseg
+    # use example:PYTHONPATH=$PYTHONPATH:. python tools/convert_datasets/create_gf12.py --root /data/zouxuechao/cloudseg/gf12ms_whu --save_path /data/zouxuechao/mmseg
     root,save_path = get_args()
     for phase in ["train","val"]:
         for serial in ["gf1","gf2"]:
