@@ -1,3 +1,11 @@
+'''
+Author: JusperLee tsinghua.kaili@gmail.com
+Date: 2024-10-21 15:35:04
+LastEditors: JusperLee tsinghua.kaili@gmail.com
+LastEditTime: 2024-10-21 15:35:04
+FilePath: /rein/configs/dinov2/head_dinov2_l_mask2former_hrc_whu.py
+Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+'''
 # dataset config
 _base_ = [
     "../_base_/datasets/hrc_whu.py",
@@ -64,12 +72,12 @@ param_scheduler = [
 
 # training schedule for 160k
 # train_cfg = dict(type="IterBasedTrainLoop", max_iters=40000, val_interval=10000)
-train_cfg = dict(type="IterBasedTrainLoop", max_iters=40000, val_interval=10000)
+train_cfg = dict(type="IterBasedTrainLoop", max_iters=40000, val_interval=4000)
 val_cfg = dict(type="ValLoop")
 test_cfg = dict(type="TestLoop")
 default_hooks = dict(
     timer=dict(type="IterTimerHook"),
-    logger=dict(type="LoggerHook", interval=50, log_metric_by_epoch=False),
+    logger=dict(type="LoggerHook", interval=4000, log_metric_by_epoch=False),
     param_scheduler=dict(type="ParamSchedulerHook"),
     checkpoint=dict(
         type="CheckpointHook",
