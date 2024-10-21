@@ -59,22 +59,22 @@ optim_wrapper = dict(
         norm_decay_mult=0.0)
 )
 param_scheduler = [
-    dict(type="PolyLR", eta_min=0, power=0.9, begin=0, end=1500, by_epoch=False)
+    dict(type="PolyLR", eta_min=0, power=0.9, begin=0, end=40000, by_epoch=False)
 ]
 
 # training schedule for 160k
 # train_cfg = dict(type="IterBasedTrainLoop", max_iters=40000, val_interval=10000)
-train_cfg = dict(type="IterBasedTrainLoop", max_iters=1500, val_interval=15)
+train_cfg = dict(type="IterBasedTrainLoop", max_iters=40000, val_interval=10000)
 val_cfg = dict(type="ValLoop")
 test_cfg = dict(type="TestLoop")
 default_hooks = dict(
     timer=dict(type="IterTimerHook"),
-    logger=dict(type="LoggerHook", interval=15, log_metric_by_epoch=False),
+    logger=dict(type="LoggerHook", interval=50, log_metric_by_epoch=False),
     param_scheduler=dict(type="ParamSchedulerHook"),
     checkpoint=dict(
         type="CheckpointHook",
         by_epoch=False,
-        interval=15,
+        interval=4000,
         max_keep_ckpts=1,
         save_best=["mIoU"],
         rule="greater",
