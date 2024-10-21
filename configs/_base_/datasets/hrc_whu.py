@@ -1,5 +1,5 @@
 dataset_type = 'HRCWHUDataset'
-data_root = '/data/zouxuechao/mmseg/hrc_whu'
+data_root = 'data/hrc_whu'
 
 crop_size = (256, 256)
 train_pipeline = [

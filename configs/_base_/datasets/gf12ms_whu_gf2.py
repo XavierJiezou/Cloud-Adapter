@@ -1,5 +1,5 @@
 dataset_type = 'GF12MSWHUGF2Dataset'
-data_root = '/data/zouxuechao/mmseg/gf12ms_whu_gf2'
+data_root = 'data/gf12ms_whu_gf2'
 
 crop_size = (256, 256)
 train_pipeline = [

@@ -1,5 +1,5 @@
 dataset_type = 'L8BIOMEDataset'
-data_root = '/data/zouxuechao/mmseg/l8_biome'
+data_root = 'data/l8_biome'
 
 crop_size = (512, 512)
 train_pipeline = [

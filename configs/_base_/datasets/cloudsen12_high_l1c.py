@@ -1,5 +1,5 @@
 dataset_type = 'CLOUDSEN12HIGHL1CDataset'
-data_root = '/data/zouxuechao/mmseg/cloudsen12_high_l1c'
+data_root = 'data/cloudsen12_high_l1c'
 
 crop_size = (512, 512)
 train_pipeline = [
