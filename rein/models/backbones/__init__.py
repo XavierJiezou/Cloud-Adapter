@@ -10,3 +10,4 @@ from .clip import CLIPVisionTransformer
 from .reins_sam_vit import ReinsSAMViT
 from .sam_vit import SAMViT
 from .reins_clip import ReinsCLIPVisionTransformer
+from .convnext_dinov2 import ConvnextDinoVisionTransformer

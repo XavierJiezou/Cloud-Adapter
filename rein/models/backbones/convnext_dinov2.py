@@ -22,14 +22,14 @@ class ConvnextDinoVisionTransformer(DinoVisionTransformer):
             x = blk(x)
             x = self.convnext.forward(
                 x,
-                h=self.H,
-                w=self.W,
+                h=H,
+                w=W,
             )
             if idx in self.out_indices:
                 outs.append(
                     x[:, 1:, :].permute(0, 2, 1).reshape(B, -1, H, W).contiguous()
                 )
-        return self.reins.return_auto(outs)
+        return outs
 
     def train(self, mode: bool = True):
         if not mode:
