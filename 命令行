@@ -84,25 +84,25 @@ CUDA_VISIBLE_DEVICES=1 python tools/train.py configs/adapter/convnext_high_l1c.p
 #  adapter gf2 start
 
 tmux new -s convnext_gf2_high
-conda activate open-mmlab
-CUDA_VISIBLE_DEVICES=1 python tools/train.py configs/adapter/convnext_high_gf2.py
+CUDA_VISIBLE_DEVICES=1 envs/bin/python tools/train.py configs/adapter/convnext_high_gf2.py
 
 
 tmux new -s convnext_gf2_low
-conda activate open-mmlab
-CUDA_VISIBLE_DEVICES=2 python tools/train.py configs/adapter/convnext_low_gf2.py
+CUDA_VISIBLE_DEVICES=2 envs/bin/python tools/train.py configs/adapter/convnext_low_gf2.py
 
 
 tmux new -s convnext_gf2_no_conv
-conda activate open-mmlab
-CUDA_VISIBLE_DEVICES=3 python tools/train.py configs/adapter/convnext_no_conv_gf2.py
+
+CUDA_VISIBLE_DEVICES=3 envs/bin/python tools/train.py configs/adapter/convnext_no_conv_gf2.py
 
 tmux new -s convnext_gf2_no_prog
-conda activate open-mmlab
-CUDA_VISIBLE_DEVICES=4 python tools/train.py configs/adapter/convnext_no_prog_gf2.py
+
+CUDA_VISIBLE_DEVICES=4 envs/bin/python tools/train.py configs/adapter/convnext_no_prog_gf2.py
 
 
 tmux new -s convnext_gf2_rank_2
-conda activate open-mmlab
-CUDA_VISIBLE_DEVICES=5 python tools/train.py configs/adapter/convnext_rank_2_gf2.py
+CUDA_VISIBLE_DEVICES=5 envs/bin/python tools/train.py configs/adapter/convnext_rank_2_gf2.py
+
+
+
 #  adapter gf2 end
