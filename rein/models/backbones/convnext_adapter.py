@@ -3,6 +3,7 @@ from torch import nn as nn
 from mmseg.models.builder import MODELS
 from timm.layers import DropPath
 from typing import List
+from timm.layers import create_act_layer
 
 class LayerNorm(nn.Module):
     def __init__(self,dim):
@@ -28,36 +29,86 @@ class Downsample(nn.Module):
 
 @MODELS.register_module()
 class AdapterConvNeXtBlock(nn.Module):
-    def __init__(self,embed_dim,drop_prob=0.2):
+    def __init__(
+        self,
+        embed_dim, 
+        rank_type="low", # low or high 
+        rank_scale=4, # 1, 2, 4, 8 
+        alpha = 1,  # 1, 2, 4, 8 or nn.Parameter(data=torch.ones(embed_dim))
+        act_layer = "silu", # nn.GELU or nn.SiLU
+        has_conv = True,
+        has_proj = True,
+        drop_prob=0, 
+    ):
         super().__init__()
-        self.conv = nn.Conv2d(embed_dim,embed_dim,7,1,3,groups=embed_dim)
-        self.norm = LayerNorm(embed_dim)
-        self.feature = nn.Sequential(
-            nn.Conv2d(embed_dim,embed_dim * 4,1),
-            nn.GELU(),
-            nn.Conv2d(embed_dim * 4,embed_dim,1)
-        )
-        self.scale = nn.Parameter(data=torch.ones(embed_dim))
+        
+        self.has_conv = has_conv
+        self.has_proj = has_proj
+        
+        if self.has_conv:
+            self.conv = nn.Sequential(
+                LayerNorm(embed_dim),
+                nn.Conv2d(embed_dim, embed_dim, 7, 1, 3, groups=embed_dim),
+            )
+                
+        if self.has_proj:
+            if rank_type == "low":
+                rank_dim = embed_dim // rank_scale
+            elif rank_type == "high":
+                rank_dim = embed_dim * rank_scale
+            else:
+                raise ValueError("rank_type must be low or high")
+            
+            self.proj = nn.Sequential(
+                LayerNorm(embed_dim),
+                nn.Conv2d(embed_dim, rank_dim, 1),
+                create_act_layer(act_layer),
+                nn.Conv2d(rank_dim, embed_dim, 1)
+            )
+            
+            self.alpha = alpha
+            
         self.drop_path = DropPath(drop_prob)
-    def forward(self,x:torch.Tensor,h:int=512 // 16,w:int=512 // 16):
+        
+    def forward(self,x:torch.Tensor,h:int=256 // 16,w:int=256 // 16):
         B = x.shape[0]
         cls,feature = torch.split(x,[1,x.shape[1] - 1],dim=1)
         feature = feature.permute(0, 2, 1).reshape(B, -1, h , w).contiguous()
-        out = self.conv(feature)
-        out = self.norm(out)
-        out = self.feature(out)
+        
+        if self.has_conv:
+            feature = self.conv(feature)
+        
+        if self.has_proj:
+            feature = self.alpha * self.proj(feature)
+        
+        feature = self.drop_path(feature)
 
-        out = out.permute(0,2,3,1)
-        out = self.scale * out
-        out = out.permute(0,3,1,2)
-        out = self.drop_path(out)
-
-        feature = feature.reshape(B, -1, feature.shape[1]).permute(0, 2, 1)
-
+        feature = feature.reshape(B, -1, feature.shape[1])
         return torch.cat((cls,feature),dim=1)
 
 if __name__ == "__main__":
-    inp = torch.randn((2, 1025, 1024))
-    model = AdapterConvNeXtBlock(1024)
+    inp = torch.randn((2, 1025, 256))
+    model = AdapterConvNeXtBlock(
+        embed_dim=1024, 
+        rank_type="high", # low or high 
+        rank_scale=4, # 1, 2, 4, 8 
+        alpha = 1,  # 1, 2, 4, 8 or nn.Parameter(data=torch.ones(embed_dim))
+        act_layer = "silu", # nn.GELU or nn.SiLU
+        has_conv = True,
+        has_proj = True,
+        drop_prob=0, 
+    )
     out = model(inp)
-    print(out.shape)
+    print(model)
+    assert out.shape == (2, 1025, 256)
+
+    conv_params = 0
+    proj_params = 0
+    for name, param in model.named_parameters():
+        if "conv" in name:
+            conv_params += param.numel()
+        if "proj" in name:
+            proj_params += param.numel()
+    print(f"conv_params: {conv_params/1e6:.2f}M")
+    print(f"proj_params: {proj_params/1e6:.2f}M")
+    print(f"total_params: {(conv_params + proj_params)/1e6:.2f}M")

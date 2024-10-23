@@ -15,6 +15,13 @@ model = dict(
         convnext_config=dict(
             type="AdapterConvNeXtBlock",
             embed_dim=1024,
+            rank_type="low", # low or high 
+            rank_scale=4, # 1, 2, 4, 8 
+            alpha = 1,  # 1, 2, 4, 8 or nn.Parameter(data=torch.ones(embed_dim))
+            act_layer = "silu", # nn.GELU or nn.SiLU
+            has_conv = True,
+            has_proj = True,
+            drop_prob=0, 
         ),
         patch_size=16,
         embed_dim=1024,

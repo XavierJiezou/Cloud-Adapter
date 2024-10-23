@@ -1,0 +1,108 @@
+tmux new -s sam_full_gf1
+conda activate open-mmlab
+CUDA_VISIBLE_DEVICES=0 python tools/train.py configs/sam/full_sam_l_mask2former_gf1.py
+
+tmux new -s sam_full_gf2
+conda activate open-mmlab
+CUDA_VISIBLE_DEVICES=1 python tools/train.py configs/sam/full_sam_l_mask2former_gf2.py
+
+
+tmux new -s sam_full_hrc_whu
+conda activate open-mmlab
+CUDA_VISIBLE_DEVICES=2 python tools/train.py configs/sam/full_sam_l_mask2former_hrc_whu.py
+
+tmux new -s sam_full_l1c
+conda activate open-mmlab
+CUDA_VISIBLE_DEVICES=3 python tools/train.py configs/sam/full_sam_l_mask2former_l1c.py
+
+
+tmux new -s sam_full_l2a
+conda activate open-mmlab
+CUDA_VISIBLE_DEVICES=4 python tools/train.py configs/sam/full_sam_l_mask2former_l2a.py
+
+
+tmux new -s sam_full_l8
+conda activate open-mmlab
+CUDA_VISIBLE_DEVICES=5 python tools/train.py configs/sam/full_sam_l_mask2former_l8.py
+
+tmux new -s rein_dinov2_l1c
+conda activate open-mmlab
+CUDA_VISIBLE_DEVICES=0 python tools/train.py configs/dinov2/rein_dinov2_mask2former_l1c.py
+
+tmux new -s convnext_dinov2_l1c
+conda activate open-mmlab
+CUDA_VISIBLE_DEVICES=1 python tools/train.py configs/dinov2/convnext_dinov2_l_maskformer_l1c.py
+
+# 测试
+
+CUDA_VISIBLE_DEVICES=0 python tools/test.py work_dirs/convnext_dinov2_l_maskformer_l1c/convnext_dinov2_l_maskformer_l1c.py work_dirs/convnext_dinov2_l_maskformer_l1c/full_best_iou.pth
+
+CUDA_VISIBLE_DEVICES=1 python tools/test.py work_dirs/rein_dinov2_mask2former_l1c/rein_dinov2_mask2former_l1c.py work_dirs/rein_dinov2_mask2former_l1c/best_mIoU_iter_40000.pth
+
+
+
+tmux new -s convnext_dinov2_gf1
+conda activate open-mmlab
+CUDA_VISIBLE_DEVICES=1 python tools/train.py configs/dinov2/convnext_dinov2_l_maskformer_gf1.py
+
+tmux new -s convnext_dinov2_gf2
+conda activate open-mmlab
+CUDA_VISIBLE_DEVICES=2 python tools/train.py configs/dinov2/convnext_dinov2_l_maskformer_gf2.py
+
+tmux new -s convnext_dinov2_hrc_whu
+conda activate open-mmlab
+CUDA_VISIBLE_DEVICES=3 python tools/train.py configs/dinov2/convnext_dinov2_l_maskformer_hrc_whu.py
+
+tmux new -s convnext_dinov2_l1c
+conda activate open-mmlab
+CUDA_VISIBLE_DEVICES=4 python tools/train.py cconfigs/dinov2/convnext_dinov2_l_maskformer_l1c.py
+
+tmux new -s convnext_dinov2_l2a
+conda activate open-mmlab
+CUDA_VISIBLE_DEVICES=5 python tools/train.py cconfigs/dinov2/convnext_dinov2_l_maskformer_l2a.py
+
+
+tmux new -s convnext_dinov2_l8
+conda activate open-mmlab
+CUDA_VISIBLE_DEVICES=4 python tools/train.py configs/dinov2/convnext_dinov2_l_maskformer_l8.py
+
+
+#  adapter l1c start
+
+tmux new -s convnext_high
+conda activate open-mmlab
+CUDA_VISIBLE_DEVICES=1 python tools/train.py configs/adapter/convnext_high_l1c.py
+
+
+tmux new -s convnext_low
+conda activate open-mmlab
+CUDA_VISIBLE_DEVICES=1 python tools/train.py configs/adapter/convnext_high_l1c.py
+
+
+#  adapter l1c end
+
+#  adapter gf2 start
+
+tmux new -s convnext_gf2_high
+conda activate open-mmlab
+CUDA_VISIBLE_DEVICES=1 python tools/train.py configs/adapter/convnext_high_gf2.py
+
+
+tmux new -s convnext_gf2_low
+conda activate open-mmlab
+CUDA_VISIBLE_DEVICES=2 python tools/train.py configs/adapter/convnext_low_gf2.py
+
+
+tmux new -s convnext_gf2_no_conv
+conda activate open-mmlab
+CUDA_VISIBLE_DEVICES=3 python tools/train.py configs/adapter/convnext_no_conv_gf2.py
+
+tmux new -s convnext_gf2_no_prog
+conda activate open-mmlab
+CUDA_VISIBLE_DEVICES=4 python tools/train.py configs/adapter/convnext_no_prog_gf2.py
+
+
+tmux new -s convnext_gf2_rank_2
+conda activate open-mmlab
+CUDA_VISIBLE_DEVICES=5 python tools/train.py configs/adapter/convnext_rank_2_gf2.py
+#  adapter gf2 end
