@@ -15,6 +15,7 @@ from mmengine.runner import Runner
 from mmseg.registry import RUNNERS
 import rein.datasets
 import rein
+import rein.models
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Train a segmentor")
