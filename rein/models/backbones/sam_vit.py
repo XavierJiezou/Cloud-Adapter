@@ -255,12 +255,15 @@ class Attention(nn.Module):
             ), "Input size must be provided if using relative positional encoding."
             # initialize relative positional embeddings
             # use input_size=1024
+            scale = 4
+            if input_size[0] == 16:
+                scale = 8
             if global_attn:
                 self.rel_pos_h = nn.Parameter(
-                    torch.zeros(4 * input_size[0] - 1, head_dim)
+                    torch.zeros(scale * input_size[0] - 1, head_dim)
                 )
                 self.rel_pos_w = nn.Parameter(
-                    torch.zeros(4 * input_size[1] - 1, head_dim)
+                    torch.zeros(scale * input_size[1] - 1, head_dim)
                 )
             else:
                 self.rel_pos_h = nn.Parameter(

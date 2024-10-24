@@ -1,36 +1,28 @@
 # crop_size = (512, 512)
-num_classes = 19
+num_classes = 19 # 
 model = dict(
     type="EncoderDecoder",
-    data_preprocessor=dict(
-        type="SegDataPreProcessor",
-        mean=[123.675, 116.28, 103.53],
-        std=[58.395, 57.12, 57.375],
-        size=(512, 512),
-        bgr_to_rgb=True,
-        pad_val=0,
-        seg_pad_val=255,
-    ),
+    # data_preprocessor=dict(
+    #     type="SegDataPreProcessor",
+    #     mean=[123.675, 116.28, 103.53],
+    #     std=[58.395, 57.12, 57.375],
+    #     size=(512, 512),
+    #     bgr_to_rgb=True,
+    #     pad_val=0,
+    #     seg_pad_val=255,
+    # ),
     backbone=dict(
-        type="ReinsDinoVisionTransformer",
-        reins_config=dict(
-            type="LoRAReins",
-            token_length=100,
-            embed_dims=1024,
-            num_layers=24,
-            patch_size=16,
-            link_token_to_query=True,
-            lora_dim=16,
-        ),
+        type="DinoVisionTransformer",
         patch_size=16,
-        embed_dim=1024,
-        depth=24,
-        num_heads=16,
+        embed_dim=768,
+        depth=12,
+        num_heads=12,
         mlp_ratio=4,
         img_size=512,
         ffn_layer="mlp",
         init_values=1e-05,
         block_chunks=0,
+        out_indices=[2, 5, 8, 11], # refer to sam base
         qkv_bias=True,
         proj_bias=True,
         ffn_bias=True,
@@ -40,9 +32,8 @@ model = dict(
         ),
     ),
     decode_head=dict(
-        type="ReinMask2FormerHead",
-        replace_query_feat=True,
-        in_channels=[1024, 1024, 1024, 1024],
+        type="Mask2FormerHead",
+        in_channels=[768, 768, 768, 768],
         strides=[4, 8, 16, 32],
         feat_channels=256,
         out_channels=256,
@@ -121,11 +112,11 @@ model = dict(
             init_cfg=None,
         ),
         loss_cls=dict(
-            type="mmdet.CrossEntropyLoss",
+            type="mmdet.CrossEntropyLoss", # 解决类别不均衡
             use_sigmoid=False,
             loss_weight=2.0,
             reduction="mean",
-            class_weight=[1.0] * num_classes + [0.1],
+            class_weight=[1.0] * num_classes + [0.1], # [1, 1, 0.1]
         ),
         loss_mask=dict(
             type="mmdet.CrossEntropyLoss",
@@ -161,9 +152,5 @@ model = dict(
     ),
     # model training and testing settings
     train_cfg=dict(),
-    test_cfg=dict(
-        mode="slide",
-        crop_size=(512, 512),
-        stride=(341, 341),
-    ),
+    test_cfg=dict(mode='whole')
 )

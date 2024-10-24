@@ -83,6 +83,9 @@ CUDA_VISIBLE_DEVICES=1 python tools/train.py configs/adapter/convnext_high_l1c.p
 
 #  adapter gf2 start
 
+tmux new -s convnext_gf2_high_rank_2
+CUDA_VISIBLE_DEVICES=0 envs/bin/python tools/train.py configs/adapter/convnext_high_rank_2_gf2.py
+
 tmux new -s convnext_gf2_high
 CUDA_VISIBLE_DEVICES=1 envs/bin/python tools/train.py configs/adapter/convnext_high_gf2.py
 
@@ -92,17 +95,74 @@ CUDA_VISIBLE_DEVICES=2 envs/bin/python tools/train.py configs/adapter/convnext_l
 
 
 tmux new -s convnext_gf2_no_conv
-
 CUDA_VISIBLE_DEVICES=3 envs/bin/python tools/train.py configs/adapter/convnext_no_conv_gf2.py
 
 tmux new -s convnext_gf2_no_prog
-
 CUDA_VISIBLE_DEVICES=4 envs/bin/python tools/train.py configs/adapter/convnext_no_prog_gf2.py
 
 
 tmux new -s convnext_gf2_rank_2
 CUDA_VISIBLE_DEVICES=5 envs/bin/python tools/train.py configs/adapter/convnext_rank_2_gf2.py
 
+tmux new -s convnext_gf2_high_rank_8
+CUDA_VISIBLE_DEVICES=6 envs/bin/python tools/train.py configs/adapter/convnext_high_rank_8_gf2.py
 
+
+tmux new -s convnext_gf2_low_rank_8
+CUDA_VISIBLE_DEVICES=7 envs/bin/python tools/train.py configs/adapter/convnext_low_rank_8_gf2.py
+
+
+tmux new -s convnext_gf2_high_rank_1
+CUDA_VISIBLE_DEVICES=5 envs/bin/python tools/train.py configs/adapter/convnext_high_rank_1_gf2.py
+
+
+tmux new -s convnext_gf2_low_rank_1
+CUDA_VISIBLE_DEVICES=7 envs/bin/python tools/train.py configs/adapter/convnext_low_rank_1_gf2.py
 
 #  adapter gf2 end
+
+# dinov2 small base start
+tmux new -s head_dinov2_base_gf2
+CUDA_VISIBLE_DEVICES=1 envs/bin/python tools/train.py configs/dinov2/head_dinov2_b_mask2former_gf2.py
+
+tmux new -s head_sam_base_gf2
+CUDA_VISIBLE_DEVICES=0 envs/bin/python tools/train.py configs/sam/head_sam_b_mask2former_gf2.py
+
+tmux new -s head_sam_h_gf2
+CUDA_VISIBLE_DEVICES=2 envs/bin/python tools/train.py configs/sam/head_sam_h_mask2former_gf2.py
+
+tmux new -s head_dinov2_s_gf2
+CUDA_VISIBLE_DEVICES=0 envs/bin/python tools/train.py configs/dinov2/head_dinov2_s_mask2former_gf2.py
+# dinov2 small base end
+
+
+# 256的3个数据集，sam large都跑错了，需要重新跑full 和 head  6个实验 #img78
+tmux new -s full_sam_l_gf1
+CUDA_VISIBLE_DEVICES=2 envs/bin/python tools/train.py configs/sam/full_sam_l_mask2former_gf1.py --resume
+
+tmux new -s full_sam_l_gf2
+CUDA_VISIBLE_DEVICES=0 envs/bin/python tools/train.py configs/sam/full_sam_l_mask2former_gf2.py --resume
+
+tmux new -s full_sam_l_hrc_whu
+CUDA_VISIBLE_DEVICES=1 envs/bin/python tools/train.py configs/sam/full_sam_l_mask2former_hrc_whu.py --resume
+
+tmux new -s head_sam_l_gf1
+CUDA_VISIBLE_DEVICES=3 envs/bin/python tools/train.py configs/sam/head_sam_l_mask2former_gf1.py --resume
+
+tmux new -s head_sam_l_gf2
+CUDA_VISIBLE_DEVICES=5 envs/bin/python tools/train.py configs/sam/head_sam_l_mask2former_gf2.py --resume
+
+tmux new -s head_sam_l_hrc_whu
+CUDA_VISIBLE_DEVICES=6 envs/bin/python tools/train.py configs/sam/head_sam_l_mask2former_hrc_whu.py --resume
+
+tmux new -s head_sam_h_gf2
+CUDA_VISIBLE_DEVICES=7 envs/bin/python tools/train.py configs/sam/head_sam_h_mask2former_gf2.py --resume
+
+tmux new -s rein_dinov2_l_gf2
+CUDA_VISIBLE_DEVICES=4 envs/bin/python tools/train.py configs/dinov2/rein_dinov2_mask2former_gf2.py
+# #img78
+
+## 待训练
+tmux new -s rein_dinov2_l_gf2
+CUDA_VISIBLE_DEVICES=??? envs/bin/python tools/train.py configs/dinov2/head_dinov2_s_mask2former_gf2.py --resume
+##

@@ -1,5 +1,5 @@
 # model settings
-crop_size = (512, 512)
+# crop_size = (512, 512)
 num_classes = 19
 norm_cfg = dict(type="SyncBN", requires_grad=True)
 data_preprocessor = dict(
@@ -9,7 +9,7 @@ data_preprocessor = dict(
     bgr_to_rgb=True,
     pad_val=0,
     seg_pad_val=255,
-    size=crop_size,
+    size=(512, 512),
 )
 checkpoint_file = "checkpoints/sam_vit_h_converted_512x512.pth"
 model = dict(
