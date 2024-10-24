@@ -1,7 +1,7 @@
 import torch
 from torch import nn as nn
 from mmseg.models.builder import MODELS
-from timm.layers import DropPath
+from timm.layers import DropPath,trunc_normal_
 from typing import List
 from timm.layers import create_act_layer
 
@@ -69,10 +69,18 @@ class AdapterConvNeXtBlock(nn.Module):
             self.alpha = alpha
             
         self.drop_path = DropPath(drop_prob)
+
+        self.apply(self._init_weights)
+    
+    def _init_weights(self, m):
+        if isinstance(m, (nn.Conv2d, nn.Linear)):
+            trunc_normal_(m.weight, std=.02)
+            nn.init.constant_(m.bias, 0)
         
     def forward(self,x:torch.Tensor,h:int=256 // 16,w:int=256 // 16):
         B = x.shape[0]
         cls,feature = torch.split(x,[1,x.shape[1] - 1],dim=1)
+        res = feature
         feature = feature.permute(0, 2, 1).reshape(B, -1, h , w).contiguous()
         
         if self.has_conv:
@@ -83,7 +91,12 @@ class AdapterConvNeXtBlock(nn.Module):
         
         feature = self.drop_path(feature)
 
+        feature = res + feature
+
         feature = feature.reshape(B, -1, feature.shape[1])
+
+        
+
         return torch.cat((cls,feature),dim=1)
 
 if __name__ == "__main__":
