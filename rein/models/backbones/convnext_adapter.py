@@ -80,8 +80,10 @@ class AdapterConvNeXtBlock(nn.Module):
     def forward(self,x:torch.Tensor,h:int=256 // 16,w:int=256 // 16):
         B = x.shape[0]
         cls,feature = torch.split(x,[1,x.shape[1] - 1],dim=1)
-        res = feature
+        
         feature = feature.permute(0, 2, 1).reshape(B, -1, h , w).contiguous()
+        
+        res = feature
         
         if self.has_conv:
             feature = self.conv(feature)

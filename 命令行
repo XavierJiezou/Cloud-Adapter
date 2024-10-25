@@ -162,7 +162,41 @@ tmux new -s rein_dinov2_l_gf2
 CUDA_VISIBLE_DEVICES=4 envs/bin/python tools/train.py configs/dinov2/rein_dinov2_mask2former_gf2.py
 # #img78
 
-## 待训练
-tmux new -s rein_dinov2_l_gf2
-CUDA_VISIBLE_DEVICES=??? envs/bin/python tools/train.py configs/dinov2/head_dinov2_s_mask2former_gf2.py --resume
-##
+
+# img86 convnext base 冻结backbone、head; 只训练adapter
+tmux new -s convnext_froze_head_dinov2_l_gf2
+CUDA_VISIBLE_DEVICES=1 envs/bin/python tools/train.py configs/adapter/convnext_dinov2_froze_head_l_maskformer_gf2.py
+#
+
+# img86 convnext base 训练header adapter
+tmux new -s convnext_froze_encode_dinov2_l_gf2
+CUDA_VISIBLE_DEVICES=2 envs/bin/python tools/train.py configs/adapter/convnext_dinov2_froze_l_maskformer_gf2.py
+#
+
+
+# 256的3个数据集，sam large都跑错了，需要重新跑full 和 head  6个实验 #img86
+tmux new -s full_sam_l_gf1
+CUDA_VISIBLE_DEVICES=3 envs/bin/python tools/train.py configs/sam/full_sam_l_mask2former_gf1.py --resume
+
+tmux new -s full_sam_l_gf2
+CUDA_VISIBLE_DEVICES=4 envs/bin/python tools/train.py configs/sam/full_sam_l_mask2former_gf2.py --resume
+
+tmux new -s full_sam_l_hrc_whu
+CUDA_VISIBLE_DEVICES=5 envs/bin/python tools/train.py configs/sam/full_sam_l_mask2former_hrc_whu.py --resume
+
+tmux new -s head_sam_l_gf1
+CUDA_VISIBLE_DEVICES=6 envs/bin/python tools/train.py configs/sam/head_sam_l_mask2former_gf1.py --resume
+
+tmux new -s head_sam_l_gf2
+CUDA_VISIBLE_DEVICES=7 envs/bin/python tools/train.py configs/sam/head_sam_l_mask2former_gf2.py --resume
+
+tmux new -s head_sam_l_hrc_whu
+CUDA_VISIBLE_DEVICES=5 envs/bin/python tools/train.py configs/sam/head_sam_l_mask2former_hrc_whu.py --resume
+
+
+tmux new -s head_sam_h_gf2
+CUDA_VISIBLE_DEVICES=1 envs/bin/python tools/train.py configs/sam/head_sam_h_mask2former_gf2.py --resume
+
+tmux new -s head_dinov2_s_gf2
+CUDA_VISIBLE_DEVICES=2 envs/bin/python tools/train.py configs/dinov2/head_dinov2_s_mask2former_gf2.py --resume
+# #img86

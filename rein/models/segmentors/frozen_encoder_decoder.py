@@ -32,3 +32,13 @@ class FrozenBackboneEncoderDecoder(EncoderDecoder):
         if self.with_neck:
             x = self.neck(x)
         return x
+
+@MODELS.register_module()
+class FrozenHeadEncoderDecoder(EncoderDecoder):
+    def train(self, mode=True):
+        super().train(mode)
+
+        self.decode_head.eval()
+        for param in self.decode_head.parameters():
+            param.requires_grad = False
+        
