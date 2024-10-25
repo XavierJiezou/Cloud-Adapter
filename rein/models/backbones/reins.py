@@ -37,10 +37,7 @@ class Reins(nn.Module):
     def create_model(self):
         self.learnable_tokens = nn.Parameter(
             torch.empty([self.num_layers, self.token_length, self.embed_dims])
-        )
-        self.scale = nn.Parameter(torch.tensor(self.scale_init))
-        self.mlp_token2feat = nn.Linear(self.embed_dims, self.embed_dims)
-        self.mlp_delta_f = nn.Linear(self.embed_dims, self.embed_dims)
+        ) 
         val = math.sqrt(
             6.0
             / float(
