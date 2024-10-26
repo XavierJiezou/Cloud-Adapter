@@ -36,12 +36,12 @@ class MyReinsDinoVisionTransformer(DinoVisionTransformer):
     def train(self, mode: bool = True):
         if not mode:
             return super().train(mode)
-        set_requires_grad(self, ["myreins"])
-        set_train(self, ["myreins"])
+        set_requires_grad(self, ["reins"])
+        set_train(self, ["reins"])
 
     def state_dict(self, destination, prefix, keep_vars):
         state = super().state_dict(destination, prefix, keep_vars)
-        keys = [k for k in state.keys() if "myreins" not in k]
+        keys = [k for k in state.keys() if "reins" not in k]
         for key in keys:
             state.pop(key)
             if key in destination:
