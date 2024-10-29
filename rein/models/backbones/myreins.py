@@ -21,8 +21,16 @@ class MyReins(nn.Module):
         link_token_to_query: bool = True,
         scale_init: float = 0.001,
         zero_mlp_delta_f: bool = False,
+        mlp_scale=4,
+        activate=None,
+        is_depend=True,
+        is_share=True,
+        high_high = False,
+        low_low=False
     ) -> None:
         super().__init__()
+        self.activate = activate
+        self.mlp_scale = mlp_scale
         self.num_layers = num_layers
         self.embed_dims = embed_dims
         self.patch_size = patch_size
@@ -32,7 +40,12 @@ class MyReins(nn.Module):
         self.scale_init = scale_init
         self.use_softmax = use_softmax
         self.zero_mlp_delta_f = zero_mlp_delta_f
+        self.is_depend = is_depend
+        self.is_share = is_share
+        self.high_high = high_high
+        self.low_low = low_low
         self.create_model()
+        self.init_weights()
 
 
     def create_model(self):
@@ -45,21 +58,45 @@ class MyReins(nn.Module):
                 3 * reduce(mul, (self.patch_size, self.patch_size), 1) + self.embed_dims
             )
         )
-        
+        activate = nn.Identity
+        if self.activate == "silu":
+            activate = nn.SiLU
         ### added by zxc
-        self.depend_mlp = nn.ModuleList([
-            nn.Sequential(
-                nn.Linear(self.embed_dims, self.embed_dims//4),
-                nn.Linear(self.embed_dims//4, self.embed_dims),
-        ) for i in range(self.num_layers)])
+        if self.is_depend:
+            hidden_num = self.embed_dims//self.mlp_scale
+            if self.high_high:
+                hidden_num = self.embed_dims * self.mlp_scale
+            self.depend_mlp = nn.ModuleList([
+                nn.Sequential(
+                    nn.Linear(self.embed_dims, hidden_num),
+                    activate(),
+                    nn.Linear(hidden_num, self.embed_dims),
+            ) for i in range(self.num_layers)])
+        else:
+            self.depend_mlp = nn.Identity()
+
+
+        # self.depend_token = nn.parameter(
+        #     torch.zeros(size=(self.num_layers,self.token_length, self.embed_dims))
+        # )
+        # self.share_token = nn.parameter(
+        #     torch.zeros(size=(self.token_length, self.embed_dims))
+        # )
         
-        self.shared_mlp = nn.Sequential(
-            nn.Linear(self.embed_dims, self.embed_dims*4),
-            nn.Linear(self.embed_dims*4, self.embed_dims),
-        )
+        if self.is_share:
+            hidden_num = self.embed_dims*self.mlp_scale
+            if self.low_low:
+                hidden_num = self.embed_dims//self.mlp_scale
+            self.shared_mlp = nn.Sequential(
+                nn.Linear(self.embed_dims, hidden_num),
+                activate(),
+                nn.Linear(hidden_num, self.embed_dims),
+            )
+        else:
+            self.shared_mlp = nn.Identity()
         ### added by zxc
 
-        nn.init.uniform_(self.learnable_tokens.data, -val, val)
+        # nn.init.uniform_(self.learnable_tokens.data, -val, val)
         # nn.init.kaiming_uniform_(self.mlp_delta_f.weight, a=math.sqrt(5))
         # nn.init.kaiming_uniform_(self.mlp_token2feat.weight, a=math.sqrt(5))
         self.transform = nn.Linear(self.embed_dims, self.query_dims)
@@ -70,6 +107,14 @@ class MyReins(nn.Module):
             self.scale = 1.0
             # nn.init.zeros_(self.mlp_delta_f.weight)
             # nn.init.zeros_(self.mlp_delta_f.bias)
+        
+
+    def init_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Linear):
+                nn.init.kaiming_uniform_(m.weight, a=math.sqrt(5))
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
 
     def return_auto(self, feats):
         return feats
@@ -104,7 +149,10 @@ class MyReins(nn.Module):
         if has_cls_token:
             cls_token, feats = torch.tensor_split(feats, [1], dim=0)  # feature: 1024 B emd_dim
         # tokens = self.get_tokens(layer) # length * emd_dim
-        tokens = self.depend_mlp[layer]
+        if self.is_depend:
+            tokens = self.depend_mlp[layer]
+        else:
+            tokens = self.depend_mlp
         delta_feat = self.forward_delta_feat(
             feats,
             tokens,
@@ -132,6 +180,8 @@ class MyReins(nn.Module):
         # delta_f = self.mlp_delta_f(delta_f + feats)
         # return delta_f
         return tokens(feats)
+
+
 
 
 if __name__ == "__main__":

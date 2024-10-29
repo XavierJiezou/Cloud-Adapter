@@ -1,27 +1,30 @@
 # dataset config
 _base_ = [
-    "../_base_/datasets/gf12ms_whu_gf2.py",
+    "../_base_/datasets/cloudsen12_high_l1c.py",
     "../_base_/default_runtime.py",
-    "../_base_/models/convnext_dinov2_maskformer.py"
+    "../_base_/models/my_rein_dinov2_mask2former.py"
 ]
 
-num_classes = 2
+num_classes = 4
 
 model = dict(
     data_preprocessor=dict(
         type="SegDataPreProcessor",
         mean=[123.675, 116.28, 103.53],
         std=[58.395, 57.12, 57.375],
-        size=(256, 256),
+        size=(512, 512),
         bgr_to_rgb=True,
         pad_val=0,
         seg_pad_val=255,
     ),
     backbone=dict(
-        img_size=256,
+        img_size=512,
+        reins_config=dict(
+            activate="silu"
+        ),
         init_cfg=dict(
             type="Pretrained",
-            checkpoint="checkpoints/dinov2_converted_256x256.pth",
+            checkpoint="checkpoints/dinov2_converted_512x512.pth",
         ),
     ),
     decode_head=dict(

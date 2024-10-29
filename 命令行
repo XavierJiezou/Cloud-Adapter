@@ -170,7 +170,7 @@ CUDA_VISIBLE_DEVICES=1 envs/bin/python tools/train.py configs/adapter/convnext_d
 
 # img86 convnext base 训练header adapter
 tmux new -s convnext_froze_encode_dinov2_l_gf2
-CUDA_VISIBLE_DEVICES=2 envs/bin/python tools/train.py configs/adapter/convnext_dinov2_froze_l_maskformer_gf2.py
+CUDA_VISIBLE_DEVICES=0 python tools/train.py configs/adapter/convnext_dinov2_froze_l_maskformer_gf2.py
 #
 
 
@@ -200,3 +200,28 @@ CUDA_VISIBLE_DEVICES=1 envs/bin/python tools/train.py configs/sam/head_sam_h_mas
 tmux new -s head_dinov2_s_gf2
 CUDA_VISIBLE_DEVICES=2 envs/bin/python tools/train.py configs/dinov2/head_dinov2_s_mask2former_gf2.py --resume
 # #img86
+
+
+# 6x3090 convnext base 训练header adapter
+tmux new -s convnext_froze_encode_dinov2_l_gf2
+conda activate open-mmlab
+CUDA_VISIBLE_DEVICES=0 python tools/train.py configs/adapter/convnext_dinov2_froze_l_maskformer_gf2.py
+#
+
+# 6x3090 
+tmux new -s full_dinov2_l8
+conda activate open-mmlab
+CUDA_VISIBLE_DEVICES=0 python tools/train.py configs/dinov2/full_dinov2_l_mask2former_l8.py
+#
+
+# 合并权重
+python tools/generate_full_weights.py --segmentor_save_path work_dirs/my_rein_dinov2_silu/full_weight.pth --backbone checkpoints/dinov2_converted_512x512.pth --head work_dirs/my_rein_dinov2_silu/best_mIoU_iter_24000.pth
+
+python tools/generate_full_weights.py --segmentor_save_path work_dirs/my_rein_dinov2_l1c/full_weight.pth --backbone checkpoints/dinov2_converted_512x512.pth --head work_dirs/my_rein_dinov2_l1c/best_mIoU_iter_32000.pth
+
+python tools/generate_full_weights.py --segmentor_save_path work_dirs/my_rein_dinov2_mlp_scale_8/full_weight.pth --backbone checkpoints/dinov2_converted_512x512.pth --head work_dirs/my_rein_dinov2_mlp_scale_8/best_mIoU_iter_40000.pth
+#
+
+# 消融实验
+
+#
