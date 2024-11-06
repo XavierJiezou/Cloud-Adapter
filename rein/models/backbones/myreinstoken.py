@@ -66,7 +66,7 @@ class MyReinsToken(nn.Module):
         std_dev = 1/torch.sqrt(torch.tensor(self.rank).float())
 
         self.tokens = nn.Parameter(
-            torch.empty([self.num_layers, self.token_length, self.embed_dims])
+            torch.empty([self.num_layers, self.embed_dims,self.token_length])
         )
         self.inverse_token = nn.Parameter(
             torch.empty([self.num_layers, self.token_length, self.embed_dims])

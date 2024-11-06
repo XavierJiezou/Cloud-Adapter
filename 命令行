@@ -223,5 +223,7 @@ python tools/generate_full_weights.py --segmentor_save_path work_dirs/my_rein_di
 #
 
 # 消融实验
-
+tmux new -s loracacheadapter_dinov2_l1c
+conda activate open-mmlab
+CUDA_VISIBLE_DEVICES=0 python tools/train.py
 #

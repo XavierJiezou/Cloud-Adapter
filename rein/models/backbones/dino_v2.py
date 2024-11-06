@@ -102,13 +102,14 @@ class DinoVisionTransformer(BaseModule):
         super().__init__(init_cfg)
         norm_layer = partial(nn.LayerNorm, eps=1e-6)
         self.out_indices = out_indices
-
+        self.drop_path_rate = drop_path_rate
         self.num_features = (
             self.embed_dim
         ) = embed_dim  # num_features for consistency with other models
         self.num_tokens = 1
         self.n_blocks = depth
         self.num_heads = num_heads
+        self.norm_layer = norm_layer
         self.patch_size = patch_size
 
         self.patch_embed = embed_layer(

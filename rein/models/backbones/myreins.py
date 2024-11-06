@@ -5,8 +5,8 @@ import torch.nn.functional as F
 import math
 from functools import reduce
 from operator import mul
+from timm.models.layers import trunc_normal_
 from torch import Tensor
-
 
 @MODELS.register_module()
 class MyReins(nn.Module):
@@ -17,33 +17,15 @@ class MyReins(nn.Module):
         patch_size: int,
         query_dims: int = 256,
         token_length: int = 100,
-        use_softmax: bool = True,
-        link_token_to_query: bool = True,
-        scale_init: float = 0.001,
-        zero_mlp_delta_f: bool = False,
-        mlp_scale=4,
-        activate=None,
-        is_depend=True,
-        is_share=True,
-        high_high = False,
-        low_low=False
+        mlp_scale=8,
     ) -> None:
         super().__init__()
-        self.activate = activate
         self.mlp_scale = mlp_scale
         self.num_layers = num_layers
         self.embed_dims = embed_dims
         self.patch_size = patch_size
         self.query_dims = query_dims
         self.token_length = token_length
-        self.link_token_to_query = link_token_to_query
-        self.scale_init = scale_init
-        self.use_softmax = use_softmax
-        self.zero_mlp_delta_f = zero_mlp_delta_f
-        self.is_depend = is_depend
-        self.is_share = is_share
-        self.high_high = high_high
-        self.low_low = low_low
         self.create_model()
         self.init_weights()
 
@@ -58,30 +40,25 @@ class MyReins(nn.Module):
                 3 * reduce(mul, (self.patch_size, self.patch_size), 1) + self.embed_dims
             )
         )
-        activate = nn.Identity
-        if self.activate == "silu":
-            activate = nn.SiLU
         ### added by zxc
         if self.is_depend:
             hidden_num = self.embed_dims//self.mlp_scale
-            if self.high_high:
-                hidden_num = self.embed_dims * self.mlp_scale
-            self.depend_mlp = nn.ModuleList([
-                nn.Sequential(
-                    nn.Linear(self.embed_dims, hidden_num),
-                    activate(),
-                    nn.Linear(hidden_num, self.embed_dims),
-            ) for i in range(self.num_layers)])
+            if self.is_conv:
+                self.depend_mlp = nn.ModuleList([
+                   nn.Conv2d(self.embed_dims, self.embed_dims, 7, 1, 3, groups=self.embed_dims)  for _ in range(self.num_layers)])
+            else:
+                if self.high_high:
+                    hidden_num = self.embed_dims * self.mlp_scale
+                self.depend_mlp = nn.ModuleList([
+                    nn.Sequential(
+                        nn.Linear(self.embed_dims, hidden_num),
+                        nn.Linear(hidden_num, self.embed_dims),
+                ) for i in range(self.num_layers)])
         else:
             self.depend_mlp = nn.Identity()
 
 
-        # self.depend_token = nn.parameter(
-        #     torch.zeros(size=(self.num_layers,self.token_length, self.embed_dims))
-        # )
-        # self.share_token = nn.parameter(
-        #     torch.zeros(size=(self.token_length, self.embed_dims))
-        # )
+
         
         if self.is_share:
             hidden_num = self.embed_dims*self.mlp_scale
@@ -115,30 +92,10 @@ class MyReins(nn.Module):
                 nn.init.kaiming_uniform_(m.weight, a=math.sqrt(5))
                 if m.bias is not None:
                     nn.init.constant_(m.bias, 0)
+            elif isinstance(m,nn.Conv2d):
+                trunc_normal_(m.weight, std=.02)
+                nn.init.constant_(m.bias, 0)
 
-    def return_auto(self, feats):
-        return feats
-        # if self.link_token_to_query:
-        #     tokens = self.transform(self.get_tokens(-1)).permute(1, 2, 0)
-        #     tokens = torch.cat(
-        #         [
-        #             F.max_pool1d(tokens, kernel_size=self.num_layers),
-        #             F.avg_pool1d(tokens, kernel_size=self.num_layers),
-        #             tokens[:, :, -1].unsqueeze(-1),
-        #         ],
-        #         dim=-1,
-        #     )
-        #     querys = self.merge(tokens.flatten(-2, -1))
-        #     return feats, querys
-        # else:
-        #     return feats
-
-    def get_tokens(self, layer: int) -> Tensor:
-        if layer == -1:
-            # return all
-            return self.learnable_tokens
-        else:
-            return self.learnable_tokens[layer]
 
     def forward(
         self, feats: Tensor, layer: int, batch_first=False, has_cls_token=True
@@ -148,7 +105,8 @@ class MyReins(nn.Module):
             feats = feats.permute(1, 0, 2) # 1025 B emd_dim
         if has_cls_token:
             cls_token, feats = torch.tensor_split(feats, [1], dim=0)  # feature: 1024 B emd_dim
-        # tokens = self.get_tokens(layer) # length * emd_dim
+
+        
         if self.is_depend:
             tokens = self.depend_mlp[layer]
         else:
@@ -159,7 +117,7 @@ class MyReins(nn.Module):
             layer,
         )
         delta_feat = self.shared_mlp(delta_feat)
-        delta_feat = delta_feat * self.scale
+
         feats = feats + delta_feat
         if has_cls_token:
             feats = torch.cat([cls_token, feats], dim=0)
@@ -168,17 +126,6 @@ class MyReins(nn.Module):
         return feats
 
     def forward_delta_feat(self, feats: Tensor, tokens: Tensor, layers: int) -> Tensor:
-        # attn = torch.einsum("nbc,mc->nbm", feats, tokens)  # 1024 B length
-        # if self.use_softmax:
-        #     attn = attn * (self.embed_dims**-0.5)
-        #     attn = F.softmax(attn, dim=-1)
-        # delta_f = torch.einsum(
-        #     "nbm,mc->nbc",
-        #     attn[:, :, 1:],   # 1024 B length-1    tokens[1:, :]: length - 1 * emd_dim
-        #     self.mlp_token2feat(tokens[1:, :]),
-        # )
-        # delta_f = self.mlp_delta_f(delta_f + feats)
-        # return delta_f
         return tokens(feats)
 
 
@@ -193,7 +140,8 @@ if __name__ == "__main__":
         embed_dims=1024,
         num_layers=24,
         patch_size=16,
-        query_dims=100
+        query_dims=100,
+        is_conv=True
     )
 
     output = rein(features,1,True)
