@@ -21,20 +21,39 @@ import torch.nn.functional as F
 import math
 from timm.layers import CondConv2d, get_condconv_initializer, create_conv2d, DropPath, get_norm_act_layer
 
-class CrossAttention(nn.Module):
-    def __init__(self, query_dim, context_dim=None, heads=8, dim_head=64):
+
+class LoRaMLP(nn.Module):
+    def __init__(self, in_dim, out_dim, rank_dim=8):
         super().__init__()
-        inner_dim = dim_head * heads
+        self.loramlp = nn.Sequential(
+            nn.Linear(in_dim, rank_dim, bias=False),
+            nn.Linear(rank_dim, out_dim, bias=False),
+        )
+    
+    def forward(self, x):
+        return self.loramlp(x)
+
+class CrossAttention(nn.Module):
+    def __init__(self, query_dim, context_dim=None, heads=8, dim_head=64, rank_dim=None):
+        super().__init__()
+        inner_dim = dim_head * heads # 512
         context_dim = query_dim if context_dim is None else context_dim
 
         self.scale = dim_head ** -0.5
         self.heads = heads
 
-        self.to_q = nn.Linear(query_dim, inner_dim, bias=False)
-        self.to_k = nn.Linear(context_dim, inner_dim, bias=False)
-        self.to_v = nn.Linear(context_dim, inner_dim, bias=False)
+        if not rank_dim:
+            self.to_q = nn.Linear(query_dim, inner_dim, bias=False)
+            self.to_k = nn.Linear(context_dim, inner_dim, bias=False)
+            self.to_v = nn.Linear(context_dim, inner_dim, bias=False)
 
-        self.to_out = nn.Linear(inner_dim, query_dim, bias=False)
+            self.to_out = nn.Linear(inner_dim, query_dim, bias=False)
+        else:
+            self.to_q = LoRaMLP(query_dim, inner_dim, rank_dim=rank_dim)
+            self.to_k = LoRaMLP(context_dim, inner_dim, rank_dim=rank_dim)
+            self.to_v = LoRaMLP(context_dim, inner_dim, rank_dim=rank_dim)
+
+            self.to_out = LoRaMLP(inner_dim, query_dim, rank_dim=rank_dim)
         
 
     def forward(self, x, context):
@@ -191,9 +210,9 @@ class PMAAConvBlock(nn.Module):
             init_fn(m, n)
 
 class ConvnextInteractiveModule(nn.Module):
-    def __init__(self, emd_dim=1024, context_dim=256):
+    def __init__(self, emd_dim=1024, context_dim=256, rank_dim=None):
         super().__init__()
-        self.attn = CrossAttention(emd_dim, context_dim)
+        self.attn = CrossAttention(emd_dim, context_dim, rank_dim=rank_dim)
 
     def forward(self, x, cache, index):
         if isinstance(cache,list) or isinstance(cache,tuple):
@@ -468,6 +487,7 @@ class OursAdapter(nn.Module):
 
                 # convnext 提取单个特征 or 多尺寸特征 start
                 context_dim=256,
+                rank_dim=None,
                 # convnext 提取单个特征 or 多尺寸特征 end,
                  ):
         super().__init__()
@@ -495,7 +515,7 @@ class OursAdapter(nn.Module):
 
         if int_type == "convnext":
             self.net = nn.ModuleList(
-            ConvnextInteractiveModule(emd_dim, context_dim)
+            ConvnextInteractiveModule(emd_dim, context_dim, rank_dim)
             for _ in range(num_layers)
         )
         elif int_type == "pmaa":
@@ -545,13 +565,14 @@ if __name__ == "__main__":
     
     return_multi_feats = True
     model = OursAdapter(
-            cnn_type="convnext",
+            cnn_type="pmaa",
             int_type="convnext",
             return_multi_feats=False,
             return_last_feature=False,
             hidden_channels=64, 
-            num_layers=24,
+            num_layers=4, # 4 8 12 16 20 24
             context_dim=64,
+            rank_dim=16,
         )
     cache = model.cnn(inp)
     out = model.forward(x,0,cache=cache)
