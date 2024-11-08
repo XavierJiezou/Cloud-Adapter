@@ -569,9 +569,9 @@ if __name__ == "__main__":
             int_type="convnext",
             return_multi_feats=False,
             return_last_feature=False,
-            hidden_channels=64, 
-            num_layers=4, # 4 8 12 16 20 24
-            context_dim=64,
+            hidden_channels=32, 
+            num_layers=24, # 4 8 12 16 20 24
+            context_dim=32,
             rank_dim=16,
         )
     cache = model.cnn(inp)
