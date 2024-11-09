@@ -8,7 +8,7 @@ import math
 import torch
 from torch import nn as nn
 from mmseg.models.builder import MODELS
-from timm.layers import DropPath,trunc_normal_
+from timm.layers import DropPath, trunc_normal_
 from typing import List
 from timm.layers import create_act_layer
 from functools import partial
@@ -29,14 +29,15 @@ class LoRaMLP(nn.Module):
             nn.Linear(in_dim, rank_dim, bias=False),
             nn.Linear(rank_dim, out_dim, bias=False),
         )
-    
+
     def forward(self, x):
         return self.loramlp(x)
+
 
 class CrossAttention(nn.Module):
     def __init__(self, query_dim, context_dim=None, heads=8, dim_head=64, rank_dim=None):
         super().__init__()
-        inner_dim = dim_head * heads # 512
+        inner_dim = dim_head * heads  # 512
         context_dim = query_dim if context_dim is None else context_dim
 
         self.scale = dim_head ** -0.5
@@ -54,7 +55,6 @@ class CrossAttention(nn.Module):
             self.to_v = LoRaMLP(context_dim, inner_dim, rank_dim=rank_dim)
 
             self.to_out = LoRaMLP(inner_dim, query_dim, rank_dim=rank_dim)
-        
 
     def forward(self, x, context):
         h = self.heads
@@ -63,7 +63,8 @@ class CrossAttention(nn.Module):
         k = self.to_k(context)
         v = self.to_v(context)
 
-        q, k, v = map(lambda t: rearrange(t, 'b n (h d) -> (b h) n d', h=h), (q, k, v))
+        q, k, v = map(lambda t: rearrange(
+            t, 'b n (h d) -> (b h) n d', h=h), (q, k, v))
 
         sim = einsum('b i d, b j d -> b i j', q, k) * self.scale
 
@@ -71,8 +72,9 @@ class CrossAttention(nn.Module):
 
         out = einsum('b i j, b j d -> b i d', attn, v)
         out = rearrange(out, '(b h) n d -> b n (h d)', h=h)
-        
+
         return self.to_out(out)
+
 
 def num_groups(group_size, channels):
     if not group_size:
@@ -156,30 +158,39 @@ class DepthwiseSeparableConv(nn.Module):
         return x
 
 
-
-
 class PMAAConvBlock(nn.Module):
-    def __init__(self, in_channels=3, hidden_channels=256, depth=4, norm=nn.BatchNorm2d, act=nn.ReLU, return_multi_feats=False,return_last_feature=True):
+    def __init__(self, in_channels=3, hidden_channels=256, depth=4, norm=nn.BatchNorm2d, act=nn.ReLU, return_multi_feats=False, return_last_feature=True, has_stem=True, has_block=True):
         super().__init__()
         self.return_last_feature = return_last_feature
         self.depth = depth
-        self.return_multi_feats=return_multi_feats
-        
-        self.proj_1x1 = DepthwiseSeparableConv(in_channels, hidden_channels, dw_kernel_size=1, norm_layer=norm, act_layer=act)
-        
+        self.has_stem = has_stem
+        self.return_multi_feats = return_multi_feats
+
+        self.proj_1x1 = DepthwiseSeparableConv(
+            in_channels, hidden_channels, dw_kernel_size=1, norm_layer=norm, act_layer=act)
+
         self.spp_dw = nn.ModuleList()
-        
-        self.spp_dw.append(
-            DepthwiseSeparableConv(hidden_channels, hidden_channels, dw_kernel_size=3, stride=1, group_size=hidden_channels, pad_type="same")
-        )
 
-        for _ in range(self.depth):
+        if has_stem:
             self.spp_dw.append(
-                DepthwiseSeparableConv(
-                    hidden_channels, hidden_channels, dw_kernel_size=3, stride=2, group_size=hidden_channels
-                )
+                DepthwiseSeparableConv(hidden_channels, hidden_channels, dw_kernel_size=3,
+                                       stride=1, group_size=hidden_channels, pad_type="same")
             )
+        else:
+            self.spp_dw.append(nn.Identity())
 
+        if has_block:
+            for _ in range(self.depth):
+                self.spp_dw.append(
+                    DepthwiseSeparableConv(
+                        hidden_channels, hidden_channels, dw_kernel_size=3, stride=2, group_size=hidden_channels
+                    )
+                )
+        else:
+            for _ in range(self.depth):
+                self.spp_dw.append(
+                    nn.MaxPool2d(kernel_size=2, stride=2)
+                )
         self._init_weights()
 
     def forward(self, x):
@@ -191,13 +202,13 @@ class PMAAConvBlock(nn.Module):
             out_k = self.spp_dw[k](output[-1])
             output.append(out_k)
 
-        
         if self.return_multi_feats:
             return output[1:]
         else:
             if self.return_last_feature:
                 return output[-1]
-            global_f = torch.zeros(output[-1].shape, requires_grad=True, device=output1.device)
+            global_f = torch.zeros(
+                output[-1].shape, requires_grad=True, device=output1.device)
             for fea in output:
                 global_f = global_f + F.adaptive_avg_pool2d(
                     fea, output_size=output[-1].shape[-2:]
@@ -209,34 +220,37 @@ class PMAAConvBlock(nn.Module):
         for n, m in self.named_modules():
             init_fn(m, n)
 
+
 class ConvnextInteractiveModule(nn.Module):
     def __init__(self, emd_dim=1024, context_dim=256, rank_dim=None):
         super().__init__()
         self.attn = CrossAttention(emd_dim, context_dim, rank_dim=rank_dim)
 
     def forward(self, x, cache, index):
-        if isinstance(cache,list) or isinstance(cache,tuple):
+        # x: 1024 2 1024
+        if isinstance(cache, list) or isinstance(cache, tuple):
             # len(cache) 4 cache[4]-23
             # 0-5->0 6-11 -> 1 12-17->2 18-23->3
-            cache = cache[index] # 
+            cache = cache[index]
         cache = F.interpolate(
             cache, (int(math.sqrt(x.shape[0])), int(math.sqrt(x.shape[0]))), mode="bilinear", align_corners=False
         )
-        cache = cache.flatten(2) # B C N
-        cache = cache.permute(2, 0, 1) # N B C
-        
+        cache = cache.flatten(2)  # B C N
+        cache = cache.permute(2, 0, 1)  # N B C
+
         # Reshape: batch first
-        x = x.permute(1, 0, 2) # B N C
-        cache = cache.permute(1, 0, 2) # B N C
+        x = x.permute(1, 0, 2)  # B N C
+        cache = cache.permute(1, 0, 2)  # B N C
         return (x + self.attn(x, cache)).permute(1, 0, 2)
 
+
 class PMAAInteractiveModule(nn.Module):
-    def __init__(self, 
-                 emd_dim=1024, 
-                 context_dim=64, 
-                 kernel: int = 1, 
-                 norm=nn.BatchNorm2d, 
-                 local_groups=32, 
+    def __init__(self,
+                 emd_dim=1024,
+                 context_dim=64,
+                 kernel: int = 1,
+                 norm=nn.BatchNorm2d,
+                 local_groups=32,
                  global_groups=2,
                  return_multi_feats=False,
                  ):
@@ -259,30 +273,30 @@ class PMAAInteractiveModule(nn.Module):
         )
         self.act = nn.Sigmoid()
         self._init_weights()
-    
+
     def _init_weights(self):
         init_fn = _init_weight_goog
         for n, m in self.named_modules():
             init_fn(m, n)
-    
 
     def forward(self, x, cache, index):
-        if isinstance(cache,list) or isinstance(cache,tuple):
-            cache = cache[index] 
+        if isinstance(cache, list) or isinstance(cache, tuple):
+            cache = cache[index]
         N, B, C = x.shape
-        H=W=int(math.sqrt(N))
+        H = W = int(math.sqrt(N))
         # reshape x -> B, C, H, W
         x = x.permute(1, 2, 0).reshape(B, C, H, W)
-        local_feat = self.local_embedding(x) # 32
+        local_feat = self.local_embedding(x)  # 32
         global_act = self.global_act(cache)
-        sig_act = F.interpolate(self.act(global_act), size=(H, W)) # 32
+        sig_act = F.interpolate(self.act(global_act), size=(H, W))  # 32
 
         global_feat = self.global_embedding(cache)
-        global_feat = F.interpolate(global_feat, size=(H, W)) # 32
+        global_feat = F.interpolate(global_feat, size=(H, W))  # 32
 
         out = local_feat * sig_act + global_feat
-        
+
         return out.permute(2, 3, 0, 1).reshape(N, B, C)
+
 
 class LayerNorm(nn.Module):
     r""" LayerNorm that supports two data formats: channels_last (default) or channels_first. 
@@ -290,6 +304,7 @@ class LayerNorm(nn.Module):
     shape (batch_size, height, width, channels) while channels_first corresponds to inputs 
     with shape (batch_size, channels, height, width).
     """
+
     def __init__(self, normalized_shape, eps=1e-6, data_format="channels_last"):
         super().__init__()
         self.weight = nn.Parameter(torch.ones(normalized_shape))
@@ -297,9 +312,9 @@ class LayerNorm(nn.Module):
         self.eps = eps
         self.data_format = data_format
         if self.data_format not in ["channels_last", "channels_first"]:
-            raise NotImplementedError 
+            raise NotImplementedError
         self.normalized_shape = (normalized_shape, )
-    
+
     def forward(self, x):
         if self.data_format == "channels_last":
             return F.layer_norm(x, self.normalized_shape, self.weight, self.bias, self.eps)
@@ -310,42 +325,48 @@ class LayerNorm(nn.Module):
             x = self.weight[:, None, None] * x + self.bias[:, None, None]
             return x
 
+
 class Block(nn.Module):
     r""" ConvNeXt Block. There are two equivalent implementations:
     (1) DwConv -> LayerNorm (channels_first) -> 1x1 Conv -> GELU -> 1x1 Conv; all in (N, C, H, W)
     (2) DwConv -> Permute to (N, H, W, C); LayerNorm (channels_last) -> Linear -> GELU -> Linear; Permute back
     We use (2) as we find it slightly faster in PyTorch
-    
+
     Args:
         dim (int): Number of input channels.
         drop_path (float): Stochastic depth rate. Default: 0.0
         layer_scale_init_value (float): Init value for Layer Scale. Default: 1e-6.
     """
+
     def __init__(self, dim, drop_path=0., layer_scale_init_value=1e-6):
         super().__init__()
-        self.dwconv = nn.Conv2d(dim, dim, kernel_size=7, padding=3, groups=dim) # depthwise conv
+        self.dwconv = nn.Conv2d(dim, dim, kernel_size=7,
+                                padding=3, groups=dim)  # depthwise conv
         self.norm = LayerNorm(dim, eps=1e-6)
-        self.pwconv1 = nn.Linear(dim, 4 * dim) # pointwise/1x1 convs, implemented with linear layers
+        # pointwise/1x1 convs, implemented with linear layers
+        self.pwconv1 = nn.Linear(dim, 4 * dim)
         self.act = nn.GELU()
         self.pwconv2 = nn.Linear(4 * dim, dim)
-        self.gamma = nn.Parameter(layer_scale_init_value * torch.ones((dim)), 
-                                    requires_grad=True) if layer_scale_init_value > 0 else None
-        self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
+        self.gamma = nn.Parameter(layer_scale_init_value * torch.ones((dim)),
+                                  requires_grad=True) if layer_scale_init_value > 0 else None
+        self.drop_path = DropPath(
+            drop_path) if drop_path > 0. else nn.Identity()
 
     def forward(self, x):
         input = x
         x = self.dwconv(x)
-        x = x.permute(0, 2, 3, 1) # (N, C, H, W) -> (N, H, W, C)
+        x = x.permute(0, 2, 3, 1)  # (N, C, H, W) -> (N, H, W, C)
         x = self.norm(x)
         x = self.pwconv1(x)
         x = self.act(x)
         x = self.pwconv2(x)
         if self.gamma is not None:
             x = self.gamma * x
-        x = x.permute(0, 3, 1, 2) # (N, H, W, C) -> (N, C, H, W)
+        x = x.permute(0, 3, 1, 2)  # (N, H, W, C) -> (N, C, H, W)
 
         x = input + self.drop_path(x)
         return x
+
 
 class ConvNeXt(nn.Module):
     r""" ConvNeXt
@@ -361,7 +382,8 @@ class ConvNeXt(nn.Module):
         layer_scale_init_value (float): Init value for Layer Scale. Default: 1e-6.
         head_init_scale (float): Init scaling value for classifier weights and biases. Default: 1.
     """
-    def __init__(self, in_chans=3, depths=[3, 3, 9, 3], dims=[96, 192, 384, 768], 
+
+    def __init__(self, in_chans=3, depths=[3, 3, 9, 3], dims=[96, 192, 384, 768],
                  drop_path_rate=0., layer_scale_init_value=1e-6, out_indices=[0, 1, 2, 3],
                  return_multi_feats=False,
                  return_last_feature=True
@@ -370,7 +392,8 @@ class ConvNeXt(nn.Module):
         self.return_last_feature = return_last_feature
         self.return_multi_feats = return_multi_feats
 
-        self.downsample_layers = nn.ModuleList() # stem and 3 intermediate downsampling conv layers
+        # stem and 3 intermediate downsampling conv layers
+        self.downsample_layers = nn.ModuleList()
         stem = nn.Sequential(
             nn.Conv2d(in_chans, dims[0], kernel_size=2, stride=2),
             LayerNorm(dims[0], eps=1e-6, data_format="channels_first")
@@ -378,18 +401,20 @@ class ConvNeXt(nn.Module):
         self.downsample_layers.append(stem)
         for i in range(3):
             downsample_layer = nn.Sequential(
-                    LayerNorm(dims[i], eps=1e-6, data_format="channels_first"),
-                    nn.Conv2d(dims[i], dims[i+1], kernel_size=2, stride=2),
+                LayerNorm(dims[i], eps=1e-6, data_format="channels_first"),
+                nn.Conv2d(dims[i], dims[i+1], kernel_size=2, stride=2),
             )
             self.downsample_layers.append(downsample_layer)
 
-        self.stages = nn.ModuleList() # 4 feature resolution stages, each consisting of multiple residual blocks
-        dp_rates=[x.item() for x in torch.linspace(0, drop_path_rate, sum(depths))] 
+        # 4 feature resolution stages, each consisting of multiple residual blocks
+        self.stages = nn.ModuleList()
+        dp_rates = [x.item()
+                    for x in torch.linspace(0, drop_path_rate, sum(depths))]
         cur = 0
         for i in range(4):
             stage = nn.Sequential(
-                *[Block(dim=dims[i], drop_path=dp_rates[cur + j], 
-                layer_scale_init_value=layer_scale_init_value) for j in range(depths[i])]
+                *[Block(dim=dims[i], drop_path=dp_rates[cur + j],
+                        layer_scale_init_value=layer_scale_init_value) for j in range(depths[i])]
             )
             self.stages.append(stage)
             cur += depths[i]
@@ -447,10 +472,11 @@ class ConvNeXt(nn.Module):
             return tuple(outs)
         if self.return_last_feature:
             return outs[-1]
-        global_f = torch.zeros(outs[-1].shape, requires_grad=True, device=outs[-1].device)
+        global_f = torch.zeros(
+            outs[-1].shape, requires_grad=True, device=outs[-1].device)
         for fea in outs:
             global_f = global_f + F.adaptive_avg_pool2d(
-                fea,output_size=outs[-1].shape[-2:]
+                fea, output_size=outs[-1].shape[-2:]
             )
         return global_f
 
@@ -458,37 +484,48 @@ class ConvNeXt(nn.Module):
         x = self.forward_features(x)
         return x
 
+
+class NoAdaptingModule(nn.Identity):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x, cache, layer):
+        return x
+
+
 @MODELS.register_module()
 class OursAdapter(nn.Module):
     def __init__(self,
-                 cnn_type="convnext", # convnext or mobilenet
-                 int_type="convnext", # cross_attention or 
+                 cnn_type="convnext",  # convnext or mobilenet
+                 int_type="convnext",  # cross_attention or
                  # 共同的参数 start
-                emd_dim=1024,
-                num_layers=24,
+                 emd_dim=1024,
+                 num_layers=24,
 
-                # 先判断是否返回多特征，之后再判断是否进行特征融合 
+                 # 先判断是否返回多特征，之后再判断是否进行特征融合
                  return_multi_feats=True,
                  return_last_feature=False,
 
                  # 共同的参数 end
 
-                 # pmaa 提取单个特征 or 多尺寸特征 start 
+                 # pmaa 提取单个特征 or 多尺寸特征 start
                  hidden_channels=256,
                  depth=4,
                  norm=nn.BatchNorm2d,
                  act=nn.ReLU,
-                 # pmaa 提取单个特征 or 多尺寸特征 end 
+                 # pmaa 提取单个特征 or 多尺寸特征 end
 
-                # pmaa net start
-                local_groups=1,
-                global_groups=1,
-                # pmaa net end
+                 # pmaa net start
+                 local_groups=1,
+                 global_groups=1,
+                 # pmaa net end
 
-                # convnext 提取单个特征 or 多尺寸特征 start
-                context_dim=256,
-                rank_dim=None,
-                # convnext 提取单个特征 or 多尺寸特征 end,
+                 # convnext 提取单个特征 or 多尺寸特征 start
+                 context_dim=256,
+                 rank_dim=None,
+                 # convnext 提取单个特征 or 多尺寸特征 end,
+                 has_stem=True,
+                 has_block=True,
                  ):
         super().__init__()
         self.cnn = nn.Identity()
@@ -500,51 +537,61 @@ class OursAdapter(nn.Module):
                 norm=norm,
                 act=act,
                 return_multi_feats=return_multi_feats,
-                return_last_feature=return_last_feature
+                return_last_feature=return_last_feature,
+                has_stem=has_stem,
+                has_block=has_block
             )
         elif cnn_type == "convnext":
-            self.cnn = ConvNeXt(depths=[1]*4, 
+            self.cnn = ConvNeXt(depths=[1]*4,
                                 dims=[context_dim]*4,
                                 return_multi_feats=return_multi_feats,
                                 return_last_feature=return_last_feature
                                 )
 
         else:
-            raise ValueError(f"cnn_type must in ['convnext','pmaa'],but got {cnn_type}")
-        
+            raise ValueError(
+                f"cnn_type must in ['convnext','pmaa'],but got {cnn_type}")
 
         if int_type == "convnext":
             self.net = nn.ModuleList(
-            ConvnextInteractiveModule(emd_dim, context_dim, rank_dim)
-            for _ in range(num_layers)
-        )
+                ConvnextInteractiveModule(emd_dim, context_dim, rank_dim)
+                for _ in range(num_layers)
+            )
         elif int_type == "pmaa":
             self.net = nn.ModuleList(
-            PMAAInteractiveModule(emd_dim, context_dim, local_groups=local_groups, global_groups=global_groups)
-            for _ in range(num_layers)
-        )
-        
+                PMAAInteractiveModule(
+                    emd_dim, context_dim, local_groups=local_groups, global_groups=global_groups)
+                for _ in range(num_layers)
+            )
+
+        elif int_type == "no_adapting":
+            self.net = nn.ModuleList(
+                NoAdaptingModule() for _ in range(num_layers)
+            )
         else:
-            raise ValueError(f"int_type must in ['convnext','pmaa'],but got {int_type}")
+            raise ValueError(
+                f"int_type must in ['convnext','pmaa'],but got {int_type}")
 
     def forward(self, feats, layer, batch_first=True, has_cls_token=True, cache=None):
         if batch_first:
-            feats = feats.permute(1, 0, 2)
+            feats = feats.permute(1, 0, 2)  # 1025 2 1024
         if has_cls_token:
             cls_token, feats = torch.tensor_split(feats, [1], dim=0)
         # 24 // 1
-        
-        feats = self.net[layer].forward(feats, cache, layer//(len(self.net) // 4))
-        
+        # feat: 1024 2 1024
+        feats = self.net[layer].forward(
+            feats, cache, layer//(len(self.net) // 4))
+
         if has_cls_token:
             feats = torch.cat([cls_token, feats], dim=0)
         if batch_first:
             feats = feats.permute(1, 0, 2)
         return feats
 
+
 if __name__ == "__main__":
-    inp = torch.randn((2,3,512,512))
-    x = torch.randn((2,1025,1024))
+    inp = torch.randn((2, 3, 512, 512))
+    x = torch.randn((2, 1025, 1024))
 
     # for cnn_type in ["convnext","pmaa"]:
     #     for return_multi_feats in [True,False]:
@@ -559,26 +606,23 @@ if __name__ == "__main__":
     #             out = model.forward(x,0,cache=cache)
     #             print(f"cnn type:{cnn_type},return_multi_feats:{return_multi_feats},return_last_feature:{return_last_feature},params:{params}mb")
 
+    # 变量 cnn_type int_type return_multi_feats return_last_feature has_cat adapter_index
 
-     # 变量 cnn_type int_type return_multi_feats return_last_feature has_cat adapter_index
-
-    
     return_multi_feats = True
     model = OursAdapter(
-            cnn_type="pmaa",
-            int_type="convnext",
-            return_multi_feats=False,
-            return_last_feature=False,
-            hidden_channels=32, 
-            num_layers=24, # 4 8 12 16 20 24
-            context_dim=32,
-            rank_dim=16,
-        )
+        cnn_type="pmaa",
+        int_type="convnext",
+        return_multi_feats=False,
+        return_last_feature=False,
+        hidden_channels=32,
+        num_layers=24,  # 4 8 12 16 20 24
+        context_dim=32,
+        rank_dim=16,
+    )
     cache = model.cnn(inp)
-    out = model.forward(x,0,cache=cache)
+    out = model.forward(x, 0, cache=cache)
     print(out.shape)
-    params= sum(p.numel() for p in model.parameters()) / 1e6
+    params = sum(p.numel() for p in model.parameters()) / 1e6
     print(f"params:{params:.2f}MB")
 
     # 4.653568mb
-   
