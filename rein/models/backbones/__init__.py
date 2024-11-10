@@ -25,3 +25,4 @@ from .sam_vit import SAMViT
 from .reins_clip import ReinsCLIPVisionTransformer
 from .convnext_dinov2 import ConvnextDinoVisionTransformer
 from .loracacheadapter_dinov2 import LoRACacheAdapterDinoVisionTransformer
+from .ours_adapter_sam import OursAdapterSamVisionTransformer
