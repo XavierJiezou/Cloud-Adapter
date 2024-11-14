@@ -1,3 +1,2 @@
-# Adapting Vision Foundation Models for Robust
-Cloud Segmentation in Remote Sensing Images
+# Adapting Vision Foundation Models for Robust Cloud Segmentation in Remote Sensing Images
 
