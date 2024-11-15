@@ -77,7 +77,7 @@ param_scheduler = [
 
 # training schedule for 160k
 # train_cfg = dict(type="IterBasedTrainLoop", max_iters=40000, val_interval=10000)
-train_cfg = dict(type="IterBasedTrainLoop", max_iters=40000, val_interval=4000)
+train_cfg = dict(type="IterBasedTrainLoop", max_iters=80000, val_interval=4000)
 val_cfg = dict(type="ValLoop")
 test_cfg = dict(type="TestLoop")
 default_hooks = dict(
@@ -88,7 +88,7 @@ default_hooks = dict(
         type="CheckpointHook",
         by_epoch=False,
         interval=4000,
-        max_keep_ckpts=1,
+        max_keep_ckpts=3,
         save_best=["mIoU"],
         rule="greater",
     ),
