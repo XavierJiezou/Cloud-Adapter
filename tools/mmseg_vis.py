@@ -21,9 +21,8 @@ def get_args() -> Tuple[str, str, str, str, int]:
     parser.add_argument('--config', type=str, help='config path')
     parser.add_argument('--checkpoint', type=str, help='checkpoint path')
     parser.add_argument('--device', type=str, help='cpu/cuda:0', default="cpu")
-    parser.add_argument('--batch_size', type=int, default=128)
     args = parser.parse_args()
-    return args.dataset_name, args.config, args.checkpoint, args.device, args.batch_size
+    return args.dataset_name, args.config, args.checkpoint, args.device
 
 
 def get_image_sub_path(dataset_name: str) -> str:
@@ -77,22 +76,20 @@ def give_colors_to_mask(mask: np.ndarray, colors=None,save_path:str=None) -> np.
 def inference():
     import rein
     import rein.models
-
-    
     dataset_name, config, checkpoint, device = get_args()
     model = init_model(config, checkpoint, device)
     img_list = get_image_list(dataset_name)
-    result = inference_model(model, img_list)
     colors = get_palette(dataset_name)
     os.makedirs(os.path.join("visualization", dataset_name,"cloud-adapter"), exist_ok=True)
     os.makedirs(os.path.join("visualization", dataset_name,"label"), exist_ok=True)
     os.makedirs(os.path.join("visualization", dataset_name,"input"), exist_ok=True)
-    for i in track(range(len(result)),total=len(result)):
-        img_path = result[i].img_path
+    for img_path in track(img_list,total=len(img_list)):
+
+        result = inference_model(model, img_path)
         ann_path = img_path.replace("img_dir", "ann_dir")
         gt = np.array(Image.open(ann_path))
         img = np.array(Image.open(img_path).convert("RGB"))
-        pred_sem_seg: torch.Tensor = result[i].pred_sem_seg.data
+        pred_sem_seg: torch.Tensor = result.pred_sem_seg.data
         pred_mask = pred_sem_seg.cpu().squeeze().numpy()
         
         filename = osp.basename(img_path).split(".")[0] + ".png"
@@ -102,10 +99,7 @@ def inference():
         Image.fromarray(img).save(os.path.join("visualization", dataset_name,"input",filename))
         
         
-        
-
-
 if __name__ == '__main__':
-    # examlr usage:python tools/mmseg_vis.py --dataset_name hrc_whu --config work_dirs/ours_adapter_pmaa_convnext_lora_16_adapter_all_hrc_whu/ours_adapter_pmaa_convnext_lora_16_adapter_all_hrc_whu.py --checkpoint work_dirs/ours_adapter_pmaa_convnext_lora_16_adapter_all_hrc_whu/full_weight.pth --device cuda:1 --batch_size 128
+    # examlr usage:python tools/mmseg_vis.py --dataset_name hrc_whu --config work_dirs/ours_adapter_pmaa_convnext_lora_16_adapter_all_hrc_whu/ours_adapter_pmaa_convnext_lora_16_adapter_all_hrc_whu.py --checkpoint work_dirs/ours_adapter_pmaa_convnext_lora_16_adapter_all_hrc_whu/full_weight.pth --device cuda:3
     # main()
     inference()
