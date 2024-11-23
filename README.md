@@ -4,7 +4,7 @@
 
 # Cloud-Adapter
 
-Cloud Segmentation for Remote Sensing Images.
+Adapting Vision Foundation Models for Robust Cloud Segmentation in Remote Sensing Images
 
 [![arXiv Paper](https://img.shields.io/badge/arXiv-2411.13127-B31B1B)](https://arxiv.org/abs/2411.13127)
 [![Project Page](https://img.shields.io/badge/Project%20Page-Cloud--Adapter-blue)](https://xavierjiezou.github.io/Cloud-Adapter/)
@@ -16,7 +16,7 @@ Cloud Segmentation for Remote Sensing Images.
 
 </div>
 
-This repository serves as the official implementation of the paper **"Adapting Vision Foundation Models for Robust Cloud Segmentation in Remote Sensing Images"**. It provides a comprehensive pipeline for semantic segmentation, including data preprocessing, model training, evaluation, and deployment, specifically tailored for cloud segmentation tasks in remote sensing imagery.  
+<!--This repository serves as the official implementation of the paper **"Adapting Vision Foundation Models for Robust Cloud Segmentation in Remote Sensing Images"**. It provides a comprehensive pipeline for semantic segmentation, including data preprocessing, model training, evaluation, and deployment, specifically tailored for cloud segmentation tasks in remote sensing imagery.-->
 
 ---
 
