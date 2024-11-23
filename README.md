@@ -235,7 +235,3 @@ If you use our code or models in your research, please cite with:
       url={https://arxiv.org/abs/2411.13127}, 
 }
 ```
-
-## License  
-
-This project is licensed under the [MIT License](LICENSE).  
