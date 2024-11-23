@@ -186,10 +186,9 @@ This will automatically evaluate the model across various scenes of the **L8_Bio
 
 If you would like to reproduce the other models and comparisons presented in the paper, please refer to our other repository: [CloudSeg](https://github.com/XavierJiezou/cloudseg). This repository contains the implementation and weights of the other models used for comparison in the study.
 
-## visiualition
+## Visualization
 
-We have published the model's visualization results on various datasets on Hugging Face at [Hugging Face](https://huggingface.co/XavierJiezou/cloudseg-models). If you prefer not to run the code, you can directly visit the repository to view the visualization results. 
----
+We have published the pre-trained model's visualization results of various datasets on Hugging Face at [Hugging Face](https://huggingface.co/XavierJiezou/cloud-adapter-models/tree/vis). If you prefer not to run the code, you can directly visit the repository to download the visualization results. 
 
 ### 7. Gradio Demo  
 
