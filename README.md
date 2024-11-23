@@ -223,14 +223,14 @@ export CUDA_VISIBLE_DEVICES=-1
 If you use our code or models in your research, please cite with:
 
 ```latex
-@article{cloud-adapter,
-  title={Adapting Vision Foundation Models for Robust Cloud Segmentation in Remote Sensing Images},
-  author={Xuechao Zou and Shun Zhang and Kai Li and Shiying Wang and Junliang Xing and Lei Jin and Congyan Lang and Pin Tao},
-  year={2024},
-  eprint={2411.13127},
-  archivePrefix={arXiv},
-  primaryClass={cs.CV},
-  url={https://arxiv.org/abs/2411.13127}
+@misc{cloud-adapter,
+      title={Adapting Vision Foundation Models for Robust Cloud Segmentation in Remote Sensing Images}, 
+      author={Xuechao Zou and Shun Zhang and Kai Li and Shiying Wang and Junliang Xing and Lei Jin and Congyan Lang and Pin Tao},
+      year={2024},
+      eprint={2411.13127},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2411.13127}, 
 }
 ```
 
