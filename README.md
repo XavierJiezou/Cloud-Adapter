@@ -16,8 +16,6 @@ Cloud Segmentation for Remote Sensing Images.
 
 </div>
 
-# Introduction  
-
 This repository serves as the official implementation of the paper **"Adapting Vision Foundation Models for Robust Cloud Segmentation in Remote Sensing Images"**. It provides a comprehensive pipeline for semantic segmentation, including data preprocessing, model training, evaluation, and deployment, specifically tailored for cloud segmentation tasks in remote sensing imagery.  
 
 ---
