@@ -27,14 +27,6 @@ Cloud Segmentation for Remote Sensing Images.
     </a>
 </p>
 
-<p>
-    <a href="#demo">View Demo</a>
-    •
-    <a href="https://github.com/XavierJiezou/Cloud-Adapter/issues/new">Report Bug</a>
-    •
-    <a href="https://github.com/XavierJiezou/Cloud-Adapter/issues/new">Request Feature</a>
-</p>
-
 <!--Love the project? Please consider [donating](https://paypal.me/xavierjiezou?country.x=C2&locale.x=zh_XC) to help it improve!-->
 
 </div>
