@@ -235,3 +235,8 @@ If you use our code or models in your research, please cite with:
       url={https://arxiv.org/abs/2411.13127}, 
 }
 ```
+
+## Acknowledgments
+
+[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=open-mmlab&repo=mmsegmentation)]([https://github.com/python-poetry/poetry](https://github.com/open-mmlab/mmsegmentation))
+[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=w1oves&repo=Rein)](https://github.com/w1oves/Rein)
