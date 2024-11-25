@@ -118,11 +118,18 @@ To use a pretrained model, specify the path to the downloaded weights in your co
 
 We utilize the [MMSegmentation](https://github.com/open-mmlab/mmsegmentation) framework for training. Please ensure you have the MMSegmentation library installed and the configuration file properly set up.  
 
-#### Step 1: Modify the Configuration File  
+#### Step 1: Download Pretrained Weights
+You can download the pretrained weights from the [DINOv2 official repository](https://github.com/facebookresearch/dinov2).Once downloaded, you can convert the weights using the following command:
+```python
+python tools/convert_models/convert_dinov2.py weight_path save_path --height image_height --width image_width
+```
+This command allows you to specify the desired image height and width for your use case.
+
+#### Step 2: Modify the Configuration File  
 
 Update the `configs` directory with your training configuration, or use one of the provided example configurations. You can customize the backbone, dataset paths, and hyperparameters in the configuration file (e.g., `configs/adapter/cloud_adapter_pmaa_convnext_lora_16_adapter_all.py`).  
 
-#### Step 2: Start Training  
+#### Step 3: Start Training  
 
 Use the following command to begin training:  
 
@@ -130,13 +137,21 @@ Use the following command to begin training:
 CUDA_VISIBLE_DEVICES=0 python tools/train.py configs/adapter/cloud_adapter_pmaa_convnext_lora_16_adapter_all.py
 ```  
 
-#### Step 3: Resume or Fine-tune  
+#### Step 4: Resume or Fine-tune  
 
 To resume training from a checkpoint or fine-tune using pretrained weights, run:  
 
 ```bash  
 python tools/train.py configs/adapter/cloud_adapter_pmaa_convnext_lora_16_adapter_all.py --resume-from path/to/checkpoint.pth  
-```  
+```
+
+#### Step 5: Generate Complete Weights
+
+To optimize disk usage and accelerate training, the saved weights include only the adapter and head components.To synthesize the full weights, use the following command:
+```python
+python tools/generate_full_weights.py --segmentor_save_path full_weight_path backbone_path --backbone backbone_path --head adapter_and_head_weight_path
+```
+Make sure to provide the appropriate paths for the backbone and the adapter/head weights.
 
 ### 6. Evaluate the Model  
 
