@@ -116,17 +116,38 @@ To use a pretrained model, specify the path to the downloaded weights in your co
 
 ### 5. Train the Model  
 
-We utilize the [MMSegmentation](https://github.com/open-mmlab/mmsegmentation) framework for training. Please ensure you have the MMSegmentation library installed and the configuration file properly set up.  
-
 #### Step 1: Download Pretrained Weights
 
 You can download the pretrained weights from the [DINOv2 official repository](https://github.com/facebookresearch/dinov2).Once downloaded, you can convert the weights using the following command:
+
 ```python
 python tools/convert_models/convert_dinov2.py weight_path save_path --height image_height --width image_width
 ```
-This command allows you to specify the desired image height and width for your use case.
 
-**Notice** After the weight conversion of the backbone network is completed, please remember to correctly fill in the path to the configuration file in the configuration file.
+This command allows you to specify the desired image height and width for your use case.
+You can also download the image encoder from [SAM official repository](https://github.com/facebookresearch/segment-anything) to train your own dataset. After downloading, use the following command to convert the weights:
+
+```python
+python tools/convert_models/convert_sam.py weight_path save_path --height image_height --width image_width
+```
+
+
+**Notice** After converting the backbone network weights, make sure to correctly specify the path to the configuration file within your config settings.
+
+**Example**
+```python
+## configs/_base_/models/cloud_adapter_dinov2.py
+model = dict(
+    backbone=dict(
+        type="CloudAdapterDinoVisionTransformer",
+        init_cfg=dict(
+            type="Pretrained",
+            checkpoint="checkpoints/dinov2_converted.pth",      ### you can set weight path here
+        ),
+    ),
+   
+)
+```
 
 #### Step 2: Modify the Configuration File  
 
