@@ -21,7 +21,7 @@ Adapting Vision Foundation Models for Robust Cloud Segmentation in Remote Sensin
 ---
 
 
-## Quick Start  
+## Installation  
 
 1. Clone the Repository  
 
