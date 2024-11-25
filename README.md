@@ -23,18 +23,18 @@ Adapting Vision Foundation Models for Robust Cloud Segmentation in Remote Sensin
 
 ## Quick Start  
 
-### 1. Clone the Repository  
+1. Clone the Repository  
 
 ```bash  
 git clone https://github.com/XavierJiezou/Cloud-Adapter.git
 cd Cloud-Adapter  
 ```  
 
-### 2. Install Dependencies  
+2. Install Dependencies  
 
 You can either set up the environment manually or use our pre-configured environment for convenience:  
 
-#### Option 1: Manual Installation  
+- Option 1: Manual Installation  
 
 Ensure you are using Python 3.8 or higher, then install the required dependencies:  
 
@@ -42,13 +42,11 @@ Ensure you are using Python 3.8 or higher, then install the required dependencie
 pip install -r requirements.txt  
 ```  
 
-#### Option 2: Use Pre-configured Environment  
+- Option 2: Use Pre-configured Environment  
 
 We provide a pre-configured environment (`envs`) hosted on Hugging Face. You can download it directly from [Hugging Face](https://huggingface.co/XavierJiezou/cloud-adapter-models). Follow the instructions on the page to set up and activate the environment.  
 
----
-
-### 3. Prepare Data  
+## Prepare Data  
 
 We have open-sourced all datasets used in the paper, which are hosted on [Hugging Face Datasets](https://huggingface.co/datasets/XavierJiezou/cloud-adapter-datasets). Please follow the instructions on the dataset page to download the data.  
 
@@ -106,54 +104,53 @@ Cloud-Adapter
 ├── ...
 ```   
 
-### 4. Model Weights  
+## Training
 
-All model weights used in the paper have been open-sourced and are available on [Hugging Face Models](https://huggingface.co/XavierJiezou/cloud-adapter-models). You can download the pretrained models and directly integrate them into your pipeline.  
+### Step 1: Download and Convert Weights
 
-To use a pretrained model, specify the path to the downloaded weights in your configuration file or command-line arguments.  
+1. Download pretrained weights of vision foundation models
 
----
+You can download the pretrained weights from the [DINOv2 official repository](https://github.com/facebookresearch/dinov2). 
 
-### 5. Train the Model  
+Once downloading, you can convert the weights using the following command:
 
-#### Step 1: Download Pretrained Weights
-
-You can download the pretrained weights from the [DINOv2 official repository](https://github.com/facebookresearch/dinov2).Once downloaded, you can convert the weights using the following command:
-
-```python
+```bash
 python tools/convert_models/convert_dinov2.py weight_path save_path --height image_height --width image_width
 ```
 
 This command allows you to specify the desired image height and width for your use case.
-You can also download the image encoder from [SAM official repository](https://github.com/facebookresearch/segment-anything) to train your own dataset. After downloading, use the following command to convert the weights:
 
-```python
+You can also download the pretrained weights from [SAM official repository](https://github.com/facebookresearch/segment-anything). 
+
+After downloading, use the following command to convert the weights:
+
+```bash
 python tools/convert_models/convert_sam.py weight_path save_path --height image_height --width image_width
 ```
 
+### Step 2: Modify the Configuration File
 
-**Notice** After converting the backbone network weights, make sure to correctly specify the path to the configuration file within your config settings.
+After converting the backbone network weights, make sure to correctly specify the path to the configuration file within your config settings.
 
-**Example**
+For example: 
+
 ```python
-## configs/_base_/models/cloud_adapter_dinov2.py
+# configs/_base_/models/cloud_adapter_dinov2.py
 model = dict(
     backbone=dict(
         type="CloudAdapterDinoVisionTransformer",
         init_cfg=dict(
             type="Pretrained",
-            checkpoint="checkpoints/dinov2_converted.pth",      ### you can set weight path here
+            checkpoint="checkpoints/dinov2_converted.pth", # you can set weight path here
         ),
     ),
    
 )
 ```
 
-#### Step 2: Modify the Configuration File  
-
 Update the `configs` directory with your training configuration, or use one of the provided example configurations. You can customize the backbone, dataset paths, and hyperparameters in the configuration file (e.g., `configs/adapter/cloud_adapter_pmaa_convnext_lora_16_adapter_all.py`).  
 
-#### Step 3: Start Training  
+### Step 3: Start Training  
 
 Use the following command to begin training:  
 
@@ -161,7 +158,7 @@ Use the following command to begin training:
 CUDA_VISIBLE_DEVICES=0 python tools/train.py configs/adapter/cloud_adapter_pmaa_convnext_lora_16_adapter_all.py
 ```  
 
-#### Step 4: Resume or Fine-tune  
+### Step 4: Resume or Fine-tune  
 
 To resume training from a checkpoint or fine-tune using pretrained weights, run:  
 
@@ -169,7 +166,7 @@ To resume training from a checkpoint or fine-tune using pretrained weights, run:
 python tools/train.py configs/adapter/cloud_adapter_pmaa_convnext_lora_16_adapter_all.py --resume-from path/to/checkpoint.pth  
 ```
 
-#### Step 5: Generate Complete Weights
+### Step 5: Generate Complete Weights
 
 To optimize disk usage and accelerate training, the saved weights include only the adapter and head components.To synthesize the full weights, use the following command:
 ```python
@@ -177,7 +174,9 @@ python tools/generate_full_weights.py --segmentor_save_path full_weight_path bac
 ```
 Make sure to provide the appropriate paths for the backbone and the adapter/head weights.
 
-### 6. Evaluate the Model  
+## Evaluatation
+
+All model weights used in the paper have been open-sourced and are available on [Hugging Face Models](https://huggingface.co/XavierJiezou/cloud-adapter-models).
 
 Use the following command to evaluate the trained model:  
 
@@ -185,7 +184,7 @@ Use the following command to evaluate the trained model:
 CUDA_VISIBLE_DEVICES=0 python tools/test.py configs/adapter/cloud_adapter_pmaa_convnext_lora_16_adapter_all.py path/to/checkpoint.pth  
 ```  
 
-#### Special Evaluation: L8_Biome Dataset  
+### Special Evaluation: L8_Biome Dataset  
 
 If you want to evaluate the model’s performance on different scenes of the **L8_Biome** dataset, you can run the following script:
 
@@ -196,7 +195,7 @@ python tools/eval_l8_scene.py --config configs/to/path.py --checkpoint path/to/c
 This will automatically evaluate the model across various scenes of the **L8_Biome** dataset, providing detailed performance metrics for each scene.  
 
 
-#### Reproducing Paper Comparisons  
+## Reproducing Paper Comparisons  
 
 If you would like to reproduce the other models and comparisons presented in the paper, please refer to our other repository: [CloudSeg](https://github.com/XavierJiezou/cloudseg). This repository contains the implementation and weights of the other models used for comparison in the study.
 
@@ -204,7 +203,7 @@ If you would like to reproduce the other models and comparisons presented in the
 
 We have published the pre-trained model's visualization results of various datasets on Hugging Face at [Hugging Face](https://huggingface.co/XavierJiezou/cloud-adapter-models/tree/vis). If you prefer not to run the code, you can directly visit the repository to download the visualization results. 
 
-### 7. Gradio Demo  
+## Gradio Demo  
 
 We have created a **Gradio** demo to showcase the model's functionality. If you'd like to try it out, follow these steps:
 
@@ -222,7 +221,7 @@ python app.py
 
 This will start the Gradio interface, where you can upload remote sensing images and visualize the model's segmentation results in real-time.
 
-#### Troubleshooting  
+## Troubleshooting  
 
 - If you encounter a `file not found` error, it is likely that the model weights have not been downloaded. Please visit [Hugging Face Models](https://huggingface.co/XavierJiezou/cloud-adapter-models) to download the pretrained model weights.
 
