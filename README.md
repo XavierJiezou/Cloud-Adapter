@@ -119,11 +119,14 @@ To use a pretrained model, specify the path to the downloaded weights in your co
 We utilize the [MMSegmentation](https://github.com/open-mmlab/mmsegmentation) framework for training. Please ensure you have the MMSegmentation library installed and the configuration file properly set up.  
 
 #### Step 1: Download Pretrained Weights
+
 You can download the pretrained weights from the [DINOv2 official repository](https://github.com/facebookresearch/dinov2).Once downloaded, you can convert the weights using the following command:
 ```python
 python tools/convert_models/convert_dinov2.py weight_path save_path --height image_height --width image_width
 ```
 This command allows you to specify the desired image height and width for your use case.
+
+**Notice** After the weight conversion of the backbone network is completed, please remember to correctly fill in the path to the configuration file in the configuration file.
 
 #### Step 2: Modify the Configuration File  
 
