@@ -174,7 +174,7 @@ python tools/generate_full_weights.py --segmentor_save_path full_weight_path bac
 ```
 Make sure to provide the appropriate paths for the backbone and the adapter/head weights.
 
-## Evaluatation
+## Evaluation
 
 All model weights used in the paper have been open-sourced and are available on [Hugging Face Models](https://huggingface.co/XavierJiezou/cloud-adapter-models).
 
