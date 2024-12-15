@@ -14,6 +14,8 @@ Adapting Vision Foundation Models for Robust Cloud Segmentation in Remote Sensin
 
 <!--Love the project? Please consider [donating](https://paypal.me/xavierjiezou?country.x=C2&locale.x=zh_XC) to help it improve!-->
 
+![framework](https://github.com/user-attachments/assets/30920919-5894-468f-93e0-880b4822a5c1)
+
 </div>
 
 <!--This repository serves as the official implementation of the paper **"Adapting Vision Foundation Models for Robust Cloud Segmentation in Remote Sensing Images"**. It provides a comprehensive pipeline for semantic segmentation, including data preprocessing, model training, evaluation, and deployment, specifically tailored for cloud segmentation tasks in remote sensing imagery.-->
