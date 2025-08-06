@@ -2,7 +2,7 @@
 
 ![logo](https://github.com/user-attachments/assets/f9351412-d54a-4ac6-9344-d412fe3b3581)
 
-# Cloud-Adapter
+# [TGRS 2025] Cloud-Adapter
 
 Adapting Vision Foundation Models for Robust Cloud Segmentation in Remote Sensing Images
 
