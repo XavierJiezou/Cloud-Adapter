@@ -22,6 +22,10 @@ Adapting Vision Foundation Models for Robust Cloud Segmentation in Remote Sensin
 
 ---
 
+## 📢 Latest Updates
+
+- **8/2025:** Our paper was accepted by **IEEE Transactions on Geoscience and Remote Sensing (TGRS)**.
+
 
 ## Installation  
 
