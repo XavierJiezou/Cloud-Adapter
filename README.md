@@ -10,7 +10,7 @@ Adapting Vision Foundation Models for Robust Cloud Segmentation in Remote Sensin
 [![Project Page](https://img.shields.io/badge/Project%20Page-Cloud--Adapter-blue)](https://xavierjiezou.github.io/Cloud-Adapter/)
 [![HugginngFace Models](https://img.shields.io/badge/🤗HugginngFace-Models-orange)](https://huggingface.co/XavierJiezou/cloud-adapter-models)
 [![HugginngFace Datasets](https://img.shields.io/badge/🤗HugginngFace-Datasets-orange)](https://huggingface.co/datasets/XavierJiezou/cloud-adapter-datasets)
-[![DOI](https://img.shields.io/badge/DOI-10.1109%2FTGRS.2025.3597410-blue)](https://doi.org/10.1109/TGRS.2025.3597410)
+[![DOI](https://img.shields.io/badge/DOI-10.1109%2FTGRS.2025.3597410-brightgreen)](https://doi.org/10.1109/TGRS.2025.3597410)
 <!--[![Overleaf](https://img.shields.io/badge/Overleaf-Open-green?logo=Overleaf&style=flat)](https://www.overleaf.com/project/6695fd4634d7fee5d0b838e5)-->
 
 <!--Love the project? Please consider [donating](https://paypal.me/xavierjiezou?country.x=C2&locale.x=zh_XC) to help it improve!-->
