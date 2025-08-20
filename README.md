@@ -250,10 +250,10 @@ If you use our code or models in your research, please cite with:
   journal={IEEE Transactions on Geoscience and Remote Sensing}, 
   title={Adapting Vision Foundation Models for Robust Cloud Segmentation in Remote Sensing Images}, 
   year={2025},
-  volume={},
+  volume={63},
   number={},
-  pages={1-1},
-  keywords={Cloud segmentation;vision foundation models;domain adaptation;fine-tuning;remote sensing image processing},
+  pages={1-14},
+  keywords={Cloud computing;Feature extraction;Image segmentation;Remote sensing;Adaptation models;Foundation models;Accuracy;Visualization;Transformers;Transfer learning;Cloud segmentation;domain adaptation;fine-tuning;remote sensing image processing},
   doi={10.1109/TGRS.2025.3597410}
 }
 ```
